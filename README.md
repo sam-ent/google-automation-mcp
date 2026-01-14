@@ -1,5 +1,7 @@
 # Apps Script MCP
 
+[![Tests](https://github.com/sam-ent/appscript-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/appscript-mcp/actions/workflows/test.yml)
+
 MCP server for Google Apps Script - create, manage, and execute Apps Script projects through natural language.
 
 ## Features
