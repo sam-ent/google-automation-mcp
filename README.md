@@ -14,7 +14,7 @@ MCP server for Google Apps Script - create, manage, and execute Apps Script proj
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/appscript-mcp.git
+git clone https://github.com/sam-ent/appscript-mcp.git
 cd appscript-mcp
 
 # Install with uv (recommended)
