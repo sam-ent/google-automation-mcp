@@ -29,7 +29,7 @@ No more copy-pasting between your AI chat and script.google.com — the AI write
 
 ## Features
 
-- **Projects** — CRUD operations on Apps Script projects
+- **CRUD** — Create, read, update, delete Apps Script projects
 - **Code Editing** — View and modify script files (JavaScript, HTML, JSON)
 - **Execution** — Run script functions with parameters
 - **Deployments** — Create, list, update, and delete deployments
@@ -162,7 +162,7 @@ Credentials are cached in `~/.appscript-mcp/token.pickle` for future sessions.
 | `start_google_auth` | Start OAuth flow, returns authorization URL |
 | `complete_google_auth` | Complete OAuth with redirect URL |
 
-### Projects
+### CRUD
 | Tool | Description |
 |------|-------------|
 | `list_script_projects` | List all accessible Apps Script projects |
