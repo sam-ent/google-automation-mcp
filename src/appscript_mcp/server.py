@@ -17,6 +17,7 @@ from .tools import (
     get_script_project,
     get_script_content,
     create_script_project,
+    delete_script_project,
     update_script_content,
     run_script_function,
     # Deployments
@@ -139,6 +140,19 @@ async def create_script_project_tool(
         title=title,
         parent_id=parent_id if parent_id else None,
     )
+
+
+@mcp.tool()
+async def delete_script_project_tool(script_id: str) -> str:
+    """
+    Delete an Apps Script project.
+
+    WARNING: This permanently deletes the script project. The action cannot be undone.
+
+    Args:
+        script_id: The script project ID to delete
+    """
+    return await delete_script_project(script_id)
 
 
 @mcp.tool()

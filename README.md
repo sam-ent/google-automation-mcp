@@ -29,7 +29,7 @@ No more copy-pasting between your AI chat and script.google.com — the AI write
 
 ## Features
 
-- **Projects** — List, create, read, and update Apps Script projects
+- **Projects** — CRUD operations on Apps Script projects
 - **Code Editing** — View and modify script files (JavaScript, HTML, JSON)
 - **Execution** — Run script functions with parameters
 - **Deployments** — Create, list, update, and delete deployments
@@ -170,6 +170,7 @@ Credentials are cached in `~/.appscript-mcp/token.pickle` for future sessions.
 | `get_script_content` | Get content of a specific file |
 | `create_script_project` | Create a new project (standalone or bound to Sheet/Doc/Form/Slides) |
 | `update_script_content` | Update files in a project |
+| `delete_script_project` | Delete a project (permanent) |
 
 ### Execution
 | Tool | Description |

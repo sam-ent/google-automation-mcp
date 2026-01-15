@@ -28,7 +28,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/script.deployments",
     "https://www.googleapis.com/auth/script.deployments.readonly",
     "https://www.googleapis.com/auth/script.processes",
-    "https://www.googleapis.com/auth/drive.readonly",  # For listing script projects
+    "https://www.googleapis.com/auth/drive.file",  # For listing and deleting script projects
     "https://www.googleapis.com/auth/userinfo.email",
     "openid",
 ]

@@ -9,6 +9,7 @@ This extension provides tools to manage Google Apps Script projects.
 - **get_script_content** — Get content of a specific file
 - **create_script_project** — Create a new project (standalone or bound to Sheet/Doc/Form/Slides)
 - **update_script_content** — Update files in a project
+- **delete_script_project** — Delete a project (permanent, cannot be undone)
 - **run_script_function** — Execute a function in a script
 - **create_deployment** — Create a new deployment
 - **list_deployments** — List all deployments

@@ -314,6 +314,27 @@ async def create_script_project(
 
 
 @handle_errors
+async def delete_script_project(script_id: str) -> str:
+    """
+    Delete an Apps Script project.
+
+    This permanently deletes the script project. The action cannot be undone.
+
+    Args:
+        script_id: The script project ID to delete
+
+    Returns:
+        str: Confirmation message
+    """
+    service = get_drive_service()
+
+    # Apps Script projects are stored as Drive files
+    await asyncio.to_thread(service.files().delete(fileId=script_id).execute)
+
+    return f"Deleted Apps Script project: {script_id}"
+
+
+@handle_errors
 async def update_script_content(
     script_id: str,
     files: List[Dict[str, str]],
