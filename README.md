@@ -4,9 +4,9 @@
 
 **AI-powered Google Apps Script management for Claude, Cursor, and other MCP clients**
 
-## What Google Wants You to Build
+## What You Can Build
 
-[Google promotes Apps Script](https://developers.google.com/apps-script/) for:
+[Apps Script](https://developers.google.com/apps-script/) enables:
 
 - **Workflow automations** — Programmatic tasks across Gmail, Sheets, Docs, Drive
 - **Custom spreadsheet functions** — Extend Sheets with your own formulas
