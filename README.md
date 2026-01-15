@@ -1,5 +1,6 @@
 # Apps Script MCP
 
+[![PyPI](https://img.shields.io/pypi/v/appscript-mcp)](https://pypi.org/project/appscript-mcp/)
 [![Tests](https://github.com/sam-ent/appscript-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/appscript-mcp/actions/workflows/test.yml)
 
 **AI-powered Google Apps Script management for Claude, Cursor, and other MCP clients**
@@ -66,23 +67,26 @@ Should work with any MCP-compatible client.
 
 ### 1. Install
 
+**Instant (no clone needed):**
+```bash
+uvx appscript-mcp  # runs directly from PyPI
+```
+
+**Global install:**
+```bash
+uv tool install appscript-mcp  # installs 'appscript-mcp' command
+```
+
 **Gemini CLI:**
 ```bash
 gemini extensions install github:sam-ent/appscript-mcp
 ```
 
-**Claude Desktop / Claude Code / Cursor:**
+**From source:**
 ```bash
 git clone https://github.com/sam-ent/appscript-mcp.git
 cd appscript-mcp
-uv tool install .  # installs 'appscript-mcp' command globally
-```
-
-Alternative (run from project directory without global install):
-```bash
-git clone https://github.com/sam-ent/appscript-mcp.git
-cd appscript-mcp
-uv sync  # then use 'uv run appscript-mcp' instead of 'appscript-mcp'
+uv sync  # then use 'uv run appscript-mcp'
 ```
 
 ### 2. Setup Google Cloud (One-Time)
@@ -118,16 +122,13 @@ This gives the MCP permission to access your Google Apps Script and Drive APIs o
 
 **If you have a browser** (local machine, X11, etc.):
 ```bash
-appscript-mcp auth
-# or if you used 'uv sync' instead of 'uv tool install':
-uv run appscript-mcp auth
+uvx appscript-mcp auth
 ```
 Opens your browser, you consent, done.
 
 **If headless** (SSH, remote server, container):
 ```bash
-appscript-mcp auth --headless
-# or: uv run appscript-mcp auth --headless
+uvx appscript-mcp auth --headless
 ```
 Prints a URL. Open it in any browser, consent, paste the redirect URL back.
 
@@ -139,8 +140,8 @@ Prints a URL. Open it in any browser, consent, paste the redirect URL back.
 {
   "mcpServers": {
     "appscript": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/appscript-mcp", "appscript-mcp"]
+      "command": "uvx",
+      "args": ["appscript-mcp"]
     }
   }
 }
@@ -153,8 +154,8 @@ Prints a URL. Open it in any browser, consent, paste the redirect URL back.
   "mcpServers": {
     "appscript": {
       "type": "stdio",
-      "command": "/path/to/appscript-mcp/.venv/bin/python",
-      "args": ["-m", "appscript_mcp.server"],
+      "command": "uvx",
+      "args": ["appscript-mcp"],
       "env": {
         "MCP_TIMEOUT": "30000",
         "MCP_TOOL_TIMEOUT": "90000"
@@ -291,7 +292,7 @@ Google enforces rate limits on the Apps Script API. If running many operations, 
 - [x] Bound scripts support (Sheets, Docs, Forms, Slides)
 - [x] Version management (create, list, get versions)
 - [x] Execution metrics and analytics
-- [ ] PyPI package (`pip install appscript-mcp`)
+- [x] PyPI package (`uvx appscript-mcp`)
 - [ ] Claude Desktop one-click install (DXT)
 
 See [Issues](https://github.com/sam-ent/appscript-mcp/issues) to request features or report bugs.
