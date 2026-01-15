@@ -40,14 +40,13 @@ Claude writes the code, deploys it to Google's cloud, and sets up triggers — a
 - **Versions** — Create and manage immutable version snapshots
 - **Monitoring** — View executions, metrics, and analytics
 
-**Google Workspace Context** (via [workspace-mcp](https://github.com/taylorwilsdon/google_workspace_mcp)):
-- **Gmail** — Read emails, search, send, manage labels
-- **Drive** — List files, read content, search
-- **Sheets** — Read/write spreadsheet data
-- **Calendar** — View and create events
-- **Docs** — Read and create documents
+**Unified Authentication:**
+- **Single OAuth flow** — One authentication covers Apps Script + all Google Workspace APIs
+- **clasp integration** — No GCP project needed, uses Google's official CLI
+- **Multi-user support** — Per-user credential storage for production deployments
+- **OAuth 2.1 with PKCE** — Modern, secure authentication for multi-user scenarios
 
-Claude can see your actual Gmail, Drive, and Sheets data while building automations — no guessing.
+Claude uses the same credentials to both manage scripts and access your Gmail, Drive, and Sheets data.
 
 **OAuth & Credentials:**
 - **clasp authentication** — No GCP project needed, uses Google's official CLI
@@ -90,26 +89,48 @@ cd appscript-mcp
 uv sync  # then use 'uv run appscript-mcp'
 ```
 
-### 2. Authenticate
+### 2. Setup & Authenticate
 
-**With clasp (recommended — no GCP project needed):**
+**Interactive setup (recommended):**
 ```bash
-uvx appscript-mcp auth
+uvx appscript-mcp setup
 ```
 
-This uses [clasp](https://github.com/google/clasp), Google's official Apps Script CLI. If clasp isn't installed, the command will offer to install it for you.
+The setup wizard:
+1. Detects your environment (clasp, OAuth config, existing credentials)
+2. Recommends the best authentication method
+3. Guides you through authentication
 
-The authentication flow:
-1. Opens your browser for Google OAuth
-2. You consent to the required permissions
-3. Tokens are saved securely to `~/.secrets/appscript-mcp/`
+**Quick auth (if you know what you want):**
+```bash
+uvx appscript-mcp auth          # clasp (easiest, no GCP project needed)
+uvx appscript-mcp auth --oauth21  # OAuth 2.1 with PKCE (multi-user/production)
+```
 
-That's it. No GCP project, no API enabling, no client secrets.
+**Check status:**
+```bash
+uvx appscript-mcp status        # shows auth status and configured users
+```
 
 <details>
-<summary><strong>Alternative: Legacy OAuth (advanced users)</strong></summary>
+<summary><strong>Authentication Methods Explained</strong></summary>
 
-If you need headless authentication or want to use your own GCP project:
+| Method | Best For | Requires |
+|--------|----------|----------|
+| **clasp** | Personal use, CLI | Node.js (auto-installed) |
+| **OAuth 2.1** | Multi-user, production | GCP project with OAuth credentials |
+| **Legacy OAuth** | Headless servers | GCP project with OAuth credentials |
+
+**clasp (default)** uses [Google's official Apps Script CLI](https://github.com/google/clasp). No GCP project needed — just authenticate with your Google account.
+
+**OAuth 2.1 with PKCE** is for production deployments with multiple users. Each user authenticates separately and credentials are stored per-user.
+
+</details>
+
+<details>
+<summary><strong>Manual OAuth Setup (advanced)</strong></summary>
+
+If you need OAuth 2.1 or legacy OAuth:
 
 1. **[Enable APIs](https://console.cloud.google.com/flows/enableapi?apiid=script.googleapis.com,drive.googleapis.com)** — Click link, select your project, enable.
 
@@ -133,11 +154,9 @@ If you need headless authentication or want to use your own GCP project:
 
 5. **Authenticate:**
    ```bash
-   # With browser
-   uvx appscript-mcp auth --legacy
-
-   # Headless (SSH, remote server)
-   uvx appscript-mcp auth --legacy --headless
+   uvx appscript-mcp auth --oauth21      # OAuth 2.1 with PKCE
+   uvx appscript-mcp auth --legacy       # Legacy OAuth 2.0
+   uvx appscript-mcp auth --headless     # Headless (no browser)
    ```
 
 </details>
@@ -185,17 +204,20 @@ If you need headless authentication or want to use your own GCP project:
 
 ## Authentication Reference
 
-| Method | When to Use |
-|--------|-------------|
-| `appscript-mcp auth` | Default — uses clasp, no GCP project needed |
-| `appscript-mcp auth --legacy` | Use your own GCP OAuth credentials |
-| `appscript-mcp auth --legacy --headless` | Headless environments with custom credentials |
+| Command | When to Use |
+|---------|-------------|
+| `appscript-mcp setup` | First-time setup with guided prompts |
+| `appscript-mcp auth` | Quick auth with clasp (no GCP project) |
+| `appscript-mcp auth --oauth21` | OAuth 2.1 with PKCE for multi-user |
+| `appscript-mcp auth --legacy` | Legacy OAuth 2.0 with GCP credentials |
+| `appscript-mcp auth --headless` | Headless environments (no browser) |
+| `appscript-mcp status` | Check authentication status |
 | In-conversation (`start_google_auth`) | Re-authenticate without leaving the conversation |
 
 **Token storage:**
-- Primary: `~/.secrets/appscript-mcp/token.json` (secure, 600 permissions)
-- clasp tokens: Read from `~/.clasprc.json` and copied to secure storage
-- Legacy: `~/.appscript-mcp/token.pickle` (auto-migrated to secure storage)
+- Per-user credentials: `~/.secrets/appscript-mcp/credentials/{email}.json`
+- clasp tokens: Read from `~/.clasprc.json` and imported to credential store
+- All files use 600 permissions (owner read/write only)
 
 ## Available Tools
 
@@ -305,9 +327,11 @@ Google enforces rate limits on the Apps Script API. If running many operations, 
 - [x] Version management (create, list, get versions)
 - [x] Execution metrics and analytics
 - [x] PyPI package (`uvx appscript-mcp`)
-- [x] Google Workspace context (Gmail, Drive, Sheets, Calendar, Docs)
 - [x] clasp authentication (no GCP project needed)
-- [x] Secure token storage (`~/.secrets/` with 600 permissions)
+- [x] Multi-user credential storage with secure permissions
+- [x] OAuth 2.1 with PKCE support
+- [x] Interactive setup wizard
+- [ ] Google Workspace tools (Gmail, Drive, Sheets, Calendar, Docs)
 - [ ] Claude Desktop one-click install (DXT)
 
 See [Issues](https://github.com/sam-ent/appscript-mcp/issues) to request features or report bugs.
@@ -323,6 +347,14 @@ uv run pytest tests/ -v
 ```bash
 uv run appscript-mcp
 ```
+
+## Acknowledgments
+
+The authentication system is forked from [google_workspace_mcp](https://github.com/taylorwilsdon/google_workspace_mcp) (MIT License) with additions for clasp integration. Specifically:
+- `auth/credential_store.py` — Per-user credential storage
+- `auth/oauth_config.py` — OAuth configuration management
+- `auth/scopes.py` — Google Workspace OAuth scopes
+- `auth/google_auth.py` — OAuth flow handling
 
 ## License
 

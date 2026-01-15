@@ -1,11 +1,13 @@
 """
 Apps Script MCP Server
 
-Unified MCP server combining Apps Script automation with Google Workspace context.
-Built on workspace-mcp for Gmail, Drive, Sheets, Calendar access.
+MCP server for Google Apps Script with unified authentication.
+Supports clasp (no GCP project needed), OAuth 2.0, and OAuth 2.1.
 """
 
 import logging
+
+from fastmcp import FastMCP
 
 from . import __version__
 from .tools import (
@@ -42,30 +44,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Try to import workspace-mcp's server and tools for Google Workspace context
-_workspace_available = False
-try:
-    from core.server import server as mcp
-
-    # Import workspace-mcp tool modules (auto-registers to their server)
-    from gmail import gmail_tools  # noqa: F401
-    from gdrive import drive_tools  # noqa: F401
-    from gsheets import sheets_tools  # noqa: F401
-    from gcalendar import calendar_tools  # noqa: F401
-    from gdocs import docs_tools  # noqa: F401
-
-    _workspace_available = True
-    logger.info("Google Workspace tools loaded (Gmail, Drive, Sheets, Calendar, Docs)")
-except ImportError as e:
-    # Fallback to standalone mode
-    logger.warning(f"workspace-mcp not available ({e}), running in standalone mode")
-    from fastmcp import FastMCP
-
-    mcp = FastMCP("Apps Script MCP")
+# Create MCP server
+mcp = FastMCP("Apps Script MCP")
 
 
 # ============================================================================
-# Register Apps Script Authentication Tools
+# Authentication Tools
 # ============================================================================
 
 
@@ -93,7 +77,7 @@ async def complete_google_auth_tool(redirect_url: str) -> str:
 
 
 # ============================================================================
-# Register Apps Script Project Tools
+# Project Tools
 # ============================================================================
 
 
@@ -223,7 +207,7 @@ async def run_script_function_tool(
 
 
 # ============================================================================
-# Register Apps Script Deployment Tools
+# Deployment Tools
 # ============================================================================
 
 
@@ -293,7 +277,7 @@ async def delete_deployment_tool(script_id: str, deployment_id: str) -> str:
 
 
 # ============================================================================
-# Register Apps Script Version Tools
+# Version Tools
 # ============================================================================
 
 
@@ -345,7 +329,7 @@ async def get_version_tool(script_id: str, version_number: int) -> str:
 
 
 # ============================================================================
-# Register Apps Script Process Tools
+# Process Tools
 # ============================================================================
 
 
@@ -368,7 +352,7 @@ async def list_script_processes_tool(
 
 
 # ============================================================================
-# Register Apps Script Metrics Tools
+# Metrics Tools
 # ============================================================================
 
 
@@ -434,215 +418,8 @@ async def generate_trigger_code(
         Apps Script code to create the trigger. User should add this to their script
         and run the setup function once to install the trigger.
     """
-    code_lines = []
-
-    if trigger_type == "on_open":
-        code_lines = [
-            "// Simple trigger - just rename your function to 'onOpen'",
-            "// This runs automatically when the document is opened",
-            "function onOpen(e) {",
-            f"  {function_name}();",
-            "}",
-        ]
-    elif trigger_type == "on_edit":
-        code_lines = [
-            "// Simple trigger - just rename your function to 'onEdit'",
-            "// This runs automatically when a user edits the spreadsheet",
-            "function onEdit(e) {",
-            f"  {function_name}();",
-            "}",
-        ]
-    elif trigger_type == "time_minutes":
-        interval = schedule or "5"
-        code_lines = [
-            "// Run this function ONCE to install the trigger",
-            f"function createTimeTrigger_{function_name}() {{",
-            "  // Delete existing triggers for this function first",
-            "  const triggers = ScriptApp.getProjectTriggers();",
-            "  triggers.forEach(trigger => {",
-            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            "      ScriptApp.deleteTrigger(trigger);",
-            "    }",
-            "  });",
-            "",
-            f"  // Create new trigger - runs every {interval} minutes",
-            f"  ScriptApp.newTrigger('{function_name}')",
-            "    .timeBased()",
-            f"    .everyMinutes({interval})",
-            "    .create();",
-            "",
-            f"  Logger.log('Trigger created: {function_name} will run every {interval} minutes');",
-            "}",
-        ]
-    elif trigger_type == "time_hours":
-        interval = schedule or "1"
-        code_lines = [
-            "// Run this function ONCE to install the trigger",
-            f"function createTimeTrigger_{function_name}() {{",
-            "  // Delete existing triggers for this function first",
-            "  const triggers = ScriptApp.getProjectTriggers();",
-            "  triggers.forEach(trigger => {",
-            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            "      ScriptApp.deleteTrigger(trigger);",
-            "    }",
-            "  });",
-            "",
-            f"  // Create new trigger - runs every {interval} hour(s)",
-            f"  ScriptApp.newTrigger('{function_name}')",
-            "    .timeBased()",
-            f"    .everyHours({interval})",
-            "    .create();",
-            "",
-            f"  Logger.log('Trigger created: {function_name} will run every {interval} hour(s)');",
-            "}",
-        ]
-    elif trigger_type == "time_daily":
-        hour = schedule or "9"
-        code_lines = [
-            "// Run this function ONCE to install the trigger",
-            f"function createDailyTrigger_{function_name}() {{",
-            "  // Delete existing triggers for this function first",
-            "  const triggers = ScriptApp.getProjectTriggers();",
-            "  triggers.forEach(trigger => {",
-            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            "      ScriptApp.deleteTrigger(trigger);",
-            "    }",
-            "  });",
-            "",
-            f"  // Create new trigger - runs daily at {hour}:00",
-            f"  ScriptApp.newTrigger('{function_name}')",
-            "    .timeBased()",
-            f"    .atHour({hour})",
-            "    .everyDays(1)",
-            "    .create();",
-            "",
-            f"  Logger.log('Trigger created: {function_name} will run daily at {hour}:00');",
-            "}",
-        ]
-    elif trigger_type == "time_weekly":
-        day = schedule.upper() if schedule else "MONDAY"
-        code_lines = [
-            "// Run this function ONCE to install the trigger",
-            f"function createWeeklyTrigger_{function_name}() {{",
-            "  // Delete existing triggers for this function first",
-            "  const triggers = ScriptApp.getProjectTriggers();",
-            "  triggers.forEach(trigger => {",
-            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            "      ScriptApp.deleteTrigger(trigger);",
-            "    }",
-            "  });",
-            "",
-            f"  // Create new trigger - runs weekly on {day}",
-            f"  ScriptApp.newTrigger('{function_name}')",
-            "    .timeBased()",
-            f"    .onWeekDay(ScriptApp.WeekDay.{day})",
-            "    .atHour(9)",
-            "    .create();",
-            "",
-            f"  Logger.log('Trigger created: {function_name} will run every {day} at 9:00');",
-            "}",
-        ]
-    elif trigger_type == "on_form_submit":
-        code_lines = [
-            "// Run this function ONCE to install the trigger",
-            "// This must be run from a script BOUND to the Google Form",
-            f"function createFormSubmitTrigger_{function_name}() {{",
-            "  // Delete existing triggers for this function first",
-            "  const triggers = ScriptApp.getProjectTriggers();",
-            "  triggers.forEach(trigger => {",
-            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            "      ScriptApp.deleteTrigger(trigger);",
-            "    }",
-            "  });",
-            "",
-            "  // Create new trigger - runs when form is submitted",
-            f"  ScriptApp.newTrigger('{function_name}')",
-            "    .forForm(FormApp.getActiveForm())",
-            "    .onFormSubmit()",
-            "    .create();",
-            "",
-            f"  Logger.log('Trigger created: {function_name} will run on form submit');",
-            "}",
-        ]
-    elif trigger_type == "on_change":
-        code_lines = [
-            "// Run this function ONCE to install the trigger",
-            "// This must be run from a script BOUND to a Google Sheet",
-            f"function createChangeTrigger_{function_name}() {{",
-            "  // Delete existing triggers for this function first",
-            "  const triggers = ScriptApp.getProjectTriggers();",
-            "  triggers.forEach(trigger => {",
-            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            "      ScriptApp.deleteTrigger(trigger);",
-            "    }",
-            "  });",
-            "",
-            "  // Create new trigger - runs when spreadsheet changes",
-            f"  ScriptApp.newTrigger('{function_name}')",
-            "    .forSpreadsheet(SpreadsheetApp.getActive())",
-            "    .onChange()",
-            "    .create();",
-            "",
-            f"  Logger.log('Trigger created: {function_name} will run on spreadsheet change');",
-            "}",
-        ]
-    else:
-        return (
-            f"Unknown trigger type: {trigger_type}\n\n"
-            "Valid types: time_minutes, time_hours, time_daily, time_weekly, "
-            "on_open, on_edit, on_form_submit, on_change"
-        )
-
-    code = "\n".join(code_lines)
-
-    instructions = []
-    if trigger_type.startswith("on_"):
-        if trigger_type in ("on_open", "on_edit"):
-            instructions = [
-                "SIMPLE TRIGGER",
-                "=" * 50,
-                "",
-                "Add this code to your script. Simple triggers run automatically",
-                "when the event occurs - no setup function needed.",
-                "",
-                "Note: Simple triggers have limitations:",
-                "- Cannot access services that require authorization",
-                "- Cannot run longer than 30 seconds",
-                "- Cannot make external HTTP requests",
-                "",
-                "For more capabilities, use an installable trigger instead.",
-                "",
-                "CODE TO ADD:",
-                "-" * 50,
-            ]
-        else:
-            instructions = [
-                "INSTALLABLE TRIGGER",
-                "=" * 50,
-                "",
-                "1. Add this code to your script",
-                f"2. Run the setup function once: createFormSubmitTrigger_{function_name}() or similar",
-                "3. The trigger will then run automatically",
-                "",
-                "CODE TO ADD:",
-                "-" * 50,
-            ]
-    else:
-        instructions = [
-            "INSTALLABLE TRIGGER",
-            "=" * 50,
-            "",
-            "1. Add this code to your script using update_script_content",
-            "2. Run the setup function ONCE (manually in Apps Script editor or via run_script_function)",
-            "3. The trigger will then run automatically on schedule",
-            "",
-            "To check installed triggers: Apps Script editor → Triggers (clock icon)",
-            "",
-            "CODE TO ADD:",
-            "-" * 50,
-        ]
-
-    return "\n".join(instructions) + "\n\n" + code
+    from .tools import generate_trigger_code as _gen_trigger
+    return await _gen_trigger(trigger_type, function_name, schedule)
 
 
 # ============================================================================
@@ -653,12 +430,8 @@ async def generate_trigger_code(
 def main():
     """Run the MCP server."""
     logger.info(f"Starting Apps Script MCP Server v{__version__}")
-    if _workspace_available:
-        logger.info(
-            "Running with Google Workspace context (Gmail, Drive, Sheets, Calendar, Docs)"
-        )
-    else:
-        logger.info("Running in standalone mode (Apps Script only)")
+    logger.info("Authentication: clasp (recommended) or OAuth 2.0/2.1")
+    logger.info("Run 'appscript-mcp setup' to configure authentication")
     mcp.run()
 
 

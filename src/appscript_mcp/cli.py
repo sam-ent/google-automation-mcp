@@ -1,8 +1,10 @@
 """
 CLI entry point for appscript-mcp.
 
-Provides authentication commands and MCP server startup.
-Uses clasp (Google's official Apps Script CLI) for OAuth by default.
+Provides:
+- setup: Interactive setup with environment detection
+- auth: Quick authentication (clasp or legacy)
+- server: Run MCP server (default)
 """
 
 import sys
@@ -12,172 +14,229 @@ def main():
     """Main CLI entry point."""
     args = sys.argv[1:]
 
-    # No args or non-auth command: run MCP server
-    if not args or args[0] != "auth":
-        from .server import main as server_main
-
-        server_main()
+    # No args: run MCP server
+    if not args:
+        _run_server()
         return
 
-    # Auth command
+    command = args[0]
+
+    if command == "setup":
+        _run_setup()
+    elif command == "auth":
+        _run_auth(args[1:])
+    elif command == "status":
+        _run_status()
+    elif command in ("--help", "-h", "help"):
+        _print_help()
+    elif command in ("--version", "-v", "version"):
+        _print_version()
+    else:
+        # Unknown command, might be server args
+        _run_server()
+
+
+def _run_server():
+    """Run the MCP server."""
+    from .server import main as server_main
+    server_main()
+
+
+def _run_setup():
+    """Run interactive setup."""
+    from .setup import run_setup
+    success = run_setup()
+    sys.exit(0 if success else 1)
+
+
+def _run_auth(args: list):
+    """Run authentication command."""
     headless = "--headless" in args
     legacy = "--legacy" in args
+    oauth21 = "--oauth21" in args
 
-    if legacy:
-        # Use our own OAuth flow (requires GCP project)
+    if legacy or oauth21:
         if headless:
             _auth_headless_legacy()
         else:
             _auth_local_legacy()
     else:
-        # Use clasp (no GCP project needed)
+        # Default: clasp
         _auth_clasp(headless=headless)
 
 
+def _run_status():
+    """Show authentication status."""
+    from .setup import detect_environment
+
+    print("\nappscript-mcp Status")
+    print("=" * 40)
+
+    env = detect_environment()
+
+    print("\nAuthentication:")
+    if env["has_credentials"]:
+        print(f"  ✓ Authenticated users: {', '.join(env['existing_users'])}")
+    else:
+        print("  ✗ No credentials found")
+
+    print("\nclasp:")
+    if env["clasp_installed"]:
+        print("  ✓ Installed")
+        if env["clasp_authenticated"]:
+            print(f"  ✓ Authenticated as {env['clasp_user']}")
+        else:
+            print("  ✗ Not authenticated")
+    else:
+        print("  ✗ Not installed")
+
+    print("\nOAuth:")
+    if env["oauth_configured"]:
+        print("  ✓ GCP credentials configured")
+        if env["oauth21_enabled"]:
+            print("  ✓ OAuth 2.1 enabled")
+    else:
+        print("  ✗ GCP credentials not configured")
+
+    print()
+
+
+def _print_help():
+    """Print help message."""
+    print("""
+appscript-mcp - Google Workspace MCP for AI
+
+Commands:
+  setup      Interactive setup with environment detection (recommended)
+  auth       Quick authentication
+  status     Show authentication status
+  version    Show version
+  help       Show this help message
+
+Auth options:
+  auth                  Use clasp (easiest, no GCP project needed)
+  auth --headless       clasp info for headless environments
+  auth --legacy         Use GCP OAuth (requires project setup)
+  auth --legacy --headless  GCP OAuth for headless environments
+  auth --oauth21        Use OAuth 2.1 (multi-user, production)
+
+Examples:
+  appscript-mcp setup           # Interactive setup
+  appscript-mcp auth            # Quick clasp authentication
+  appscript-mcp                 # Run MCP server
+
+For more info: https://github.com/sam-ent/appscript-mcp
+""")
+
+
+def _print_version():
+    """Print version."""
+    try:
+        from importlib.metadata import version
+        v = version("appscript-mcp")
+    except Exception:
+        v = "unknown"
+    print(f"appscript-mcp {v}")
+
+
 def _auth_clasp(headless: bool = False):
-    """Authenticate using clasp (recommended - no GCP project needed)."""
+    """Authenticate using clasp."""
     from .auth import (
         get_credentials,
         is_clasp_installed,
         run_clasp_login,
-        SECURE_TOKEN_PATH,
+        detect_clasp_environment,
     )
+    from .auth.credential_store import get_credential_store
 
-    print("Apps Script MCP Authentication")
+    print("appscript-mcp Authentication")
     print("=" * 40)
     print()
 
-    # Check if already authenticated
-    existing = get_credentials()
-    if existing:
-        print("Already authenticated.")
-        print(f"Token location: {SECURE_TOKEN_PATH}")
-        print()
-        response = input("Re-authenticate? [y/N]: ").strip().lower()
-        if response != "y":
-            print("Keeping existing credentials.")
-            return
-        print()
+    # Check existing credentials
+    creds = get_credentials()
+    if creds:
+        store = get_credential_store()
+        users = store.list_users()
+        if users:
+            print(f"Already authenticated: {', '.join(users)}")
+            print()
+            response = input("Re-authenticate? [y/N]: ").strip().lower()
+            if response != "y":
+                print("Keeping existing credentials.")
+                return
+            print()
 
-    # Check if clasp is installed
+    # Check clasp
     if not is_clasp_installed():
         print("clasp (Google's Apps Script CLI) is not installed.")
         print()
         print("Install it with:")
         print("  npm install -g @google/clasp")
         print()
-        print("Or with npx (no global install):")
-        print("  npx @google/clasp login")
+        print("Or run interactive setup:")
+        print("  appscript-mcp setup")
         print()
 
         if headless:
-            print("For headless environments without npm, use:")
+            print("For headless environments, use:")
             print("  appscript-mcp auth --legacy --headless")
-            print()
-            print("This requires a GCP project with OAuth credentials.")
-        else:
-            response = input("Try to install clasp now? [Y/n]: ").strip().lower()
-            if response != "n":
-                _install_clasp()
-                if not is_clasp_installed():
-                    print("\nclasp installation failed. Please install manually.")
-                    sys.exit(1)
-            else:
-                print("\nTo authenticate without clasp, use:")
-                print("  appscript-mcp auth --legacy")
-                sys.exit(1)
         return
 
-    # clasp is installed, run login
+    if headless:
+        print("clasp requires a browser for OAuth.")
+        print()
+        print("Options:")
+        print("1. Run 'clasp login' on a machine with browser access,")
+        print("   then copy ~/.clasprc.json to this machine.")
+        print()
+        print("2. Use legacy OAuth (requires GCP project):")
+        print("   appscript-mcp auth --legacy --headless")
+        return
+
+    # Run clasp login
     print("Using clasp for authentication (no GCP project needed)")
     print()
 
-    if headless:
-        print("Note: clasp requires a browser for OAuth.")
-        print("Run 'clasp login' on a machine with browser access,")
-        print("then copy ~/.clasprc.json to this machine.")
-        print()
-        print("Alternatively, use --legacy for headless OAuth:")
-        print("  appscript-mcp auth --legacy --headless")
-        return
+    success, message = run_clasp_login()
+    print(message)
 
-    if run_clasp_login():
-        # Verify credentials were obtained
-        creds = get_credentials()
-        if creds:
-            print()
-            print("Authentication successful!")
-            print(f"Token saved to: {SECURE_TOKEN_PATH}")
-        else:
-            print()
-            print("Authentication may have succeeded but credentials not found.")
-            print("Try running 'clasp login' manually.")
-            sys.exit(1)
-    else:
-        print()
-        print("Authentication failed. Please try again or use --legacy mode.")
-        sys.exit(1)
-
-
-def _install_clasp():
-    """Attempt to install clasp via npm."""
-    import subprocess
-
-    print("Installing clasp...")
-    print()
-
-    try:
-        result = subprocess.run(
-            ["npm", "install", "-g", "@google/clasp"],
-            timeout=120,
-        )
-        if result.returncode == 0:
-            print()
-            print("clasp installed successfully!")
-        else:
-            print()
-            print("npm install failed. Trying with sudo...")
-            subprocess.run(
-                ["sudo", "npm", "install", "-g", "@google/clasp"],
-                timeout=120,
-            )
-    except FileNotFoundError:
-        print("npm not found. Please install Node.js first:")
-        print("  https://nodejs.org/")
-    except subprocess.TimeoutExpired:
-        print("Installation timed out.")
+    if success:
+        # Import credentials
+        from .setup import _import_clasp_credentials
+        _import_clasp_credentials()
 
 
 def _auth_local_legacy():
     """Browser-based auth with local callback server (legacy method)."""
-    from .auth import auth_interactive, get_credentials, SECURE_TOKEN_PATH
+    from .auth import get_credentials, auth_interactive
+    from .auth.credential_store import get_credential_store
 
-    # Check if already authenticated
-    existing = get_credentials()
+    store = get_credential_store()
+    existing = store.list_users()
+
     if existing:
-        print("Already authenticated.")
-        print(f"Token location: {SECURE_TOKEN_PATH}")
+        print(f"Already authenticated: {', '.join(existing)}")
         print()
-        print("To re-authenticate, delete the token file and try again.")
+        print("To re-authenticate, use: appscript-mcp setup")
         return
 
-    print("Legacy authentication (requires GCP project)")
+    print("Legacy OAuth Authentication (requires GCP project)")
     print("=" * 40)
     print()
     print("Opening browser for Google authentication...")
-    print("(If browser doesn't open, use: appscript-mcp auth --legacy --headless)\n")
+    print("(If browser doesn't open, use --headless)")
+    print()
 
     try:
         auth_interactive()
         print()
-        print("Authentication successful!")
-        print(f"Token saved to: {SECURE_TOKEN_PATH}")
-    except FileNotFoundError as e:
+        print("✓ Authentication successful!")
+    except ValueError as e:
         print(f"Error: {e}")
         print()
-        print("For easier setup without GCP project, use clasp:")
-        print("  npm install -g @google/clasp")
-        print("  appscript-mcp auth")
+        print("For easier setup without GCP project:")
+        print("  appscript-mcp setup")
         sys.exit(1)
     except Exception as e:
         print(f"Authentication failed: {e}")
@@ -186,17 +245,18 @@ def _auth_local_legacy():
 
 def _auth_headless_legacy():
     """Manual auth flow for headless environments (legacy method)."""
-    from .auth import start_auth_flow, complete_auth_flow, get_credentials, SECURE_TOKEN_PATH
+    from .auth import start_auth_flow, complete_auth_flow, get_credentials
+    from .auth.credential_store import get_credential_store
 
-    print("Legacy headless authentication (requires GCP project)")
+    print("Legacy Headless Authentication (requires GCP project)")
     print("=" * 40)
     print()
 
-    # Check if already authenticated
-    existing = get_credentials()
+    store = get_credential_store()
+    existing = store.list_users()
+
     if existing:
-        print("Already authenticated.")
-        print(f"Token location: {SECURE_TOKEN_PATH}")
+        print(f"Already authenticated: {', '.join(existing)}")
         print()
         response = input("Re-authenticate? [y/N]: ").strip().lower()
         if response != "y":
@@ -205,10 +265,9 @@ def _auth_headless_legacy():
 
     try:
         auth_url, flow = start_auth_flow()
-    except FileNotFoundError as e:
+    except ValueError as e:
         print(f"Error: {e}")
         print()
-        print("You need OAuth credentials from a GCP project.")
         print("For easier setup, use clasp on a machine with browser access:")
         print("  npm install -g @google/clasp")
         print("  clasp login")
@@ -229,15 +288,14 @@ def _auth_headless_legacy():
         print("\nNo URL provided")
         sys.exit(1)
 
-    if not redirect_url.startswith("http://localhost"):
-        print("\nInvalid URL. Should start with http://localhost")
+    if not redirect_url.startswith("http"):
+        print("\nInvalid URL. Should start with http")
         sys.exit(1)
 
     try:
         complete_auth_flow(flow, redirect_url)
         print()
-        print("Authentication successful!")
-        print(f"Token saved to: {SECURE_TOKEN_PATH}")
+        print("✓ Authentication successful!")
     except Exception as e:
         print(f"\nAuthentication failed: {e}")
         sys.exit(1)
