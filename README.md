@@ -40,6 +40,7 @@ No more context-switching between your AI assistant and script.google.com — th
 - **Claude Desktop** — macOS, Windows
 - **Claude Code** — CLI
 - **Cursor** — IDE
+- **Gemini CLI** — Google's AI CLI
 
 Should work with any MCP-compatible client.
 
@@ -47,6 +48,12 @@ Should work with any MCP-compatible client.
 
 ### 1. Install
 
+**Gemini CLI:**
+```bash
+gemini extensions install github:sam-ent/appscript-mcp
+```
+
+**Claude Desktop / Claude Code / Cursor:**
 ```bash
 git clone https://github.com/sam-ent/appscript-mcp.git
 cd appscript-mcp

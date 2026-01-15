@@ -1,0 +1,11 @@
+{
+  "name": "appscript-mcp",
+  "version": "0.1.0",
+  "description": "AI-powered Google Apps Script management - create, deploy, and execute Apps Script projects",
+  "mcpServers": {
+    "appscript": {
+      "command": "uv",
+      "args": ["run", "--directory", "${extensionPath}", "appscript-mcp"]
+    }
+  }
+}
