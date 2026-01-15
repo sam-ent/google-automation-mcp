@@ -25,8 +25,14 @@ from .tools import (
     list_deployments,
     update_deployment,
     delete_deployment,
+    # Versions
+    list_versions,
+    create_version,
+    get_version,
     # Processes
     list_script_processes,
+    # Metrics
+    get_script_metrics,
 )
 
 # Configure logging
@@ -269,6 +275,58 @@ async def delete_deployment_tool(script_id: str, deployment_id: str) -> str:
 
 
 # ============================================================================
+# Register Version Tools
+# ============================================================================
+
+
+@mcp.tool()
+async def list_versions_tool(script_id: str) -> str:
+    """
+    List all versions of a script project.
+
+    Versions are immutable snapshots of your script code.
+    They are created when you deploy or explicitly create a version.
+
+    Args:
+        script_id: The script project ID
+    """
+    return await list_versions(script_id)
+
+
+@mcp.tool()
+async def create_version_tool(
+    script_id: str,
+    description: str = "",
+) -> str:
+    """
+    Create a new immutable version of a script project.
+
+    Versions capture a snapshot of the current script code.
+    Once created, versions cannot be modified.
+
+    Args:
+        script_id: The script project ID
+        description: Optional description for this version
+    """
+    return await create_version(
+        script_id=script_id,
+        description=description if description else None,
+    )
+
+
+@mcp.tool()
+async def get_version_tool(script_id: str, version_number: int) -> str:
+    """
+    Get details of a specific version.
+
+    Args:
+        script_id: The script project ID
+        version_number: The version number to retrieve (1, 2, 3, etc.)
+    """
+    return await get_version(script_id, version_number)
+
+
+# ============================================================================
 # Register Process Tools
 # ============================================================================
 
@@ -288,6 +346,32 @@ async def list_script_processes_tool(
     return await list_script_processes(
         page_size=page_size,
         script_id=script_id if script_id else None,
+    )
+
+
+# ============================================================================
+# Register Metrics Tools
+# ============================================================================
+
+
+@mcp.tool()
+async def get_script_metrics_tool(
+    script_id: str,
+    metrics_granularity: str = "DAILY",
+) -> str:
+    """
+    Get execution metrics for a script project.
+
+    Returns analytics data including active users, total executions,
+    and failed executions over time.
+
+    Args:
+        script_id: The script project ID
+        metrics_granularity: Granularity of metrics - "DAILY" or "WEEKLY"
+    """
+    return await get_script_metrics(
+        script_id=script_id,
+        metrics_granularity=metrics_granularity,
     )
 
 
@@ -336,153 +420,153 @@ async def generate_trigger_code(
 
     if trigger_type == "on_open":
         code_lines = [
-            f"// Simple trigger - just rename your function to 'onOpen'",
-            f"// This runs automatically when the document is opened",
-            f"function onOpen(e) {{",
+            "// Simple trigger - just rename your function to 'onOpen'",
+            "// This runs automatically when the document is opened",
+            "function onOpen(e) {",
             f"  {function_name}();",
-            f"}}",
+            "}",
         ]
     elif trigger_type == "on_edit":
         code_lines = [
-            f"// Simple trigger - just rename your function to 'onEdit'",
-            f"// This runs automatically when a user edits the spreadsheet",
-            f"function onEdit(e) {{",
+            "// Simple trigger - just rename your function to 'onEdit'",
+            "// This runs automatically when a user edits the spreadsheet",
+            "function onEdit(e) {",
             f"  {function_name}();",
-            f"}}",
+            "}",
         ]
     elif trigger_type == "time_minutes":
         interval = schedule or "5"
         code_lines = [
-            f"// Run this function ONCE to install the trigger",
+            "// Run this function ONCE to install the trigger",
             f"function createTimeTrigger_{function_name}() {{",
-            f"  // Delete existing triggers for this function first",
-            f"  const triggers = ScriptApp.getProjectTriggers();",
-            f"  triggers.forEach(trigger => {{",
+            "  // Delete existing triggers for this function first",
+            "  const triggers = ScriptApp.getProjectTriggers();",
+            "  triggers.forEach(trigger => {",
             f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            f"      ScriptApp.deleteTrigger(trigger);",
-            f"    }}",
-            f"  }});",
-            f"",
+            "      ScriptApp.deleteTrigger(trigger);",
+            "    }",
+            "  });",
+            "",
             f"  // Create new trigger - runs every {interval} minutes",
             f"  ScriptApp.newTrigger('{function_name}')",
-            f"    .timeBased()",
+            "    .timeBased()",
             f"    .everyMinutes({interval})",
-            f"    .create();",
-            f"",
+            "    .create();",
+            "",
             f"  Logger.log('Trigger created: {function_name} will run every {interval} minutes');",
-            f"}}",
+            "}",
         ]
     elif trigger_type == "time_hours":
         interval = schedule or "1"
         code_lines = [
-            f"// Run this function ONCE to install the trigger",
+            "// Run this function ONCE to install the trigger",
             f"function createTimeTrigger_{function_name}() {{",
-            f"  // Delete existing triggers for this function first",
-            f"  const triggers = ScriptApp.getProjectTriggers();",
-            f"  triggers.forEach(trigger => {{",
+            "  // Delete existing triggers for this function first",
+            "  const triggers = ScriptApp.getProjectTriggers();",
+            "  triggers.forEach(trigger => {",
             f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            f"      ScriptApp.deleteTrigger(trigger);",
-            f"    }}",
-            f"  }});",
-            f"",
+            "      ScriptApp.deleteTrigger(trigger);",
+            "    }",
+            "  });",
+            "",
             f"  // Create new trigger - runs every {interval} hour(s)",
             f"  ScriptApp.newTrigger('{function_name}')",
-            f"    .timeBased()",
+            "    .timeBased()",
             f"    .everyHours({interval})",
-            f"    .create();",
-            f"",
+            "    .create();",
+            "",
             f"  Logger.log('Trigger created: {function_name} will run every {interval} hour(s)');",
-            f"}}",
+            "}",
         ]
     elif trigger_type == "time_daily":
         hour = schedule or "9"
         code_lines = [
-            f"// Run this function ONCE to install the trigger",
+            "// Run this function ONCE to install the trigger",
             f"function createDailyTrigger_{function_name}() {{",
-            f"  // Delete existing triggers for this function first",
-            f"  const triggers = ScriptApp.getProjectTriggers();",
-            f"  triggers.forEach(trigger => {{",
+            "  // Delete existing triggers for this function first",
+            "  const triggers = ScriptApp.getProjectTriggers();",
+            "  triggers.forEach(trigger => {",
             f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            f"      ScriptApp.deleteTrigger(trigger);",
-            f"    }}",
-            f"  }});",
-            f"",
+            "      ScriptApp.deleteTrigger(trigger);",
+            "    }",
+            "  });",
+            "",
             f"  // Create new trigger - runs daily at {hour}:00",
             f"  ScriptApp.newTrigger('{function_name}')",
-            f"    .timeBased()",
+            "    .timeBased()",
             f"    .atHour({hour})",
-            f"    .everyDays(1)",
-            f"    .create();",
-            f"",
+            "    .everyDays(1)",
+            "    .create();",
+            "",
             f"  Logger.log('Trigger created: {function_name} will run daily at {hour}:00');",
-            f"}}",
+            "}",
         ]
     elif trigger_type == "time_weekly":
         day = schedule.upper() if schedule else "MONDAY"
         code_lines = [
-            f"// Run this function ONCE to install the trigger",
+            "// Run this function ONCE to install the trigger",
             f"function createWeeklyTrigger_{function_name}() {{",
-            f"  // Delete existing triggers for this function first",
-            f"  const triggers = ScriptApp.getProjectTriggers();",
-            f"  triggers.forEach(trigger => {{",
+            "  // Delete existing triggers for this function first",
+            "  const triggers = ScriptApp.getProjectTriggers();",
+            "  triggers.forEach(trigger => {",
             f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            f"      ScriptApp.deleteTrigger(trigger);",
-            f"    }}",
-            f"  }});",
-            f"",
+            "      ScriptApp.deleteTrigger(trigger);",
+            "    }",
+            "  });",
+            "",
             f"  // Create new trigger - runs weekly on {day}",
             f"  ScriptApp.newTrigger('{function_name}')",
-            f"    .timeBased()",
+            "    .timeBased()",
             f"    .onWeekDay(ScriptApp.WeekDay.{day})",
-            f"    .atHour(9)",
-            f"    .create();",
-            f"",
+            "    .atHour(9)",
+            "    .create();",
+            "",
             f"  Logger.log('Trigger created: {function_name} will run every {day} at 9:00');",
-            f"}}",
+            "}",
         ]
     elif trigger_type == "on_form_submit":
         code_lines = [
-            f"// Run this function ONCE to install the trigger",
-            f"// This must be run from a script BOUND to the Google Form",
+            "// Run this function ONCE to install the trigger",
+            "// This must be run from a script BOUND to the Google Form",
             f"function createFormSubmitTrigger_{function_name}() {{",
-            f"  // Delete existing triggers for this function first",
-            f"  const triggers = ScriptApp.getProjectTriggers();",
-            f"  triggers.forEach(trigger => {{",
+            "  // Delete existing triggers for this function first",
+            "  const triggers = ScriptApp.getProjectTriggers();",
+            "  triggers.forEach(trigger => {",
             f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            f"      ScriptApp.deleteTrigger(trigger);",
-            f"    }}",
-            f"  }});",
-            f"",
-            f"  // Create new trigger - runs when form is submitted",
+            "      ScriptApp.deleteTrigger(trigger);",
+            "    }",
+            "  });",
+            "",
+            "  // Create new trigger - runs when form is submitted",
             f"  ScriptApp.newTrigger('{function_name}')",
-            f"    .forForm(FormApp.getActiveForm())",
-            f"    .onFormSubmit()",
-            f"    .create();",
-            f"",
+            "    .forForm(FormApp.getActiveForm())",
+            "    .onFormSubmit()",
+            "    .create();",
+            "",
             f"  Logger.log('Trigger created: {function_name} will run on form submit');",
-            f"}}",
+            "}",
         ]
     elif trigger_type == "on_change":
         code_lines = [
-            f"// Run this function ONCE to install the trigger",
-            f"// This must be run from a script BOUND to a Google Sheet",
+            "// Run this function ONCE to install the trigger",
+            "// This must be run from a script BOUND to a Google Sheet",
             f"function createChangeTrigger_{function_name}() {{",
-            f"  // Delete existing triggers for this function first",
-            f"  const triggers = ScriptApp.getProjectTriggers();",
-            f"  triggers.forEach(trigger => {{",
+            "  // Delete existing triggers for this function first",
+            "  const triggers = ScriptApp.getProjectTriggers();",
+            "  triggers.forEach(trigger => {",
             f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
-            f"      ScriptApp.deleteTrigger(trigger);",
-            f"    }}",
-            f"  }});",
-            f"",
-            f"  // Create new trigger - runs when spreadsheet changes",
+            "      ScriptApp.deleteTrigger(trigger);",
+            "    }",
+            "  });",
+            "",
+            "  // Create new trigger - runs when spreadsheet changes",
             f"  ScriptApp.newTrigger('{function_name}')",
-            f"    .forSpreadsheet(SpreadsheetApp.getActive())",
-            f"    .onChange()",
-            f"    .create();",
-            f"",
+            "    .forSpreadsheet(SpreadsheetApp.getActive())",
+            "    .onChange()",
+            "    .create();",
+            "",
             f"  Logger.log('Trigger created: {function_name} will run on spreadsheet change');",
-            f"}}",
+            "}",
         ]
     else:
         return (
@@ -531,7 +615,7 @@ async def generate_trigger_code(
             "=" * 50,
             "",
             "1. Add this code to your script using update_script_content",
-            f"2. Run the setup function ONCE (manually in Apps Script editor or via run_script_function)",
+            "2. Run the setup function ONCE (manually in Apps Script editor or via run_script_function)",
             "3. The trigger will then run automatically on schedule",
             "",
             "To check installed triggers: Apps Script editor → Triggers (clock icon)",

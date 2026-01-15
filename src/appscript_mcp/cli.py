@@ -14,6 +14,7 @@ def main():
     # No args or non-auth command: run MCP server
     if not args or args[0] != "auth":
         from .server import main as server_main
+
         server_main()
         return
 
@@ -62,7 +63,9 @@ def _auth_headless():
     # Check if already authenticated
     existing = get_credentials()
     if existing:
-        response = input("Already authenticated. Re-authenticate? [y/N]: ").strip().lower()
+        response = (
+            input("Already authenticated. Re-authenticate? [y/N]: ").strip().lower()
+        )
         if response != "y":
             print("Keeping existing credentials.")
             return

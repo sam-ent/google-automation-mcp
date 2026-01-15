@@ -5,16 +5,7 @@ Tests all tools with mocked API responses.
 """
 
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
-
-
-# Mock the auth module before importing tools
-@pytest.fixture(autouse=True)
-def mock_auth():
-    """Mock authentication for all tests."""
-    with patch("appscript_mcp.tools.get_credentials") as mock_creds:
-        mock_creds.return_value = Mock()
-        yield mock_creds
+from unittest.mock import Mock, patch
 
 
 @pytest.fixture
@@ -47,7 +38,9 @@ class TestListScriptProjects:
         }
         mock_drive_service.files().list().execute.return_value = mock_response
 
-        with patch("appscript_mcp.tools.get_drive_service", return_value=mock_drive_service):
+        with patch(
+            "appscript_mcp.tools.get_drive_service", return_value=mock_drive_service
+        ):
             from appscript_mcp.tools import list_script_projects
 
             result = await list_script_projects()
@@ -61,7 +54,9 @@ class TestListScriptProjects:
         """Test listing projects when none exist."""
         mock_drive_service.files().list().execute.return_value = {"files": []}
 
-        with patch("appscript_mcp.tools.get_drive_service", return_value=mock_drive_service):
+        with patch(
+            "appscript_mcp.tools.get_drive_service", return_value=mock_drive_service
+        ):
             from appscript_mcp.tools import list_script_projects
 
             result = await list_script_projects()
@@ -91,7 +86,9 @@ class TestGetScriptProject:
         }
         mock_script_service.projects().get().execute.return_value = mock_response
 
-        with patch("appscript_mcp.tools.get_script_service", return_value=mock_script_service):
+        with patch(
+            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+        ):
             from appscript_mcp.tools import get_script_project
 
             result = await get_script_project("test123")
@@ -110,7 +107,9 @@ class TestCreateScriptProject:
         mock_response = {"scriptId": "new123", "title": "New Project"}
         mock_script_service.projects().create().execute.return_value = mock_response
 
-        with patch("appscript_mcp.tools.get_script_service", return_value=mock_script_service):
+        with patch(
+            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+        ):
             from appscript_mcp.tools import create_script_project
 
             result = await create_script_project("New Project")
@@ -129,9 +128,13 @@ class TestUpdateScriptContent:
             {"name": "Code", "type": "SERVER_JS", "source": "function main() {}"}
         ]
         mock_response = {"files": files_to_update}
-        mock_script_service.projects().updateContent().execute.return_value = mock_response
+        mock_script_service.projects().updateContent().execute.return_value = (
+            mock_response
+        )
 
-        with patch("appscript_mcp.tools.get_script_service", return_value=mock_script_service):
+        with patch(
+            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+        ):
             from appscript_mcp.tools import update_script_content
 
             result = await update_script_content("test123", files_to_update)
@@ -149,7 +152,9 @@ class TestRunScriptFunction:
         mock_response = {"response": {"result": "Success"}}
         mock_script_service.scripts().run().execute.return_value = mock_response
 
-        with patch("appscript_mcp.tools.get_script_service", return_value=mock_script_service):
+        with patch(
+            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+        ):
             from appscript_mcp.tools import run_script_function
 
             result = await run_script_function("test123", "myFunction", dev_mode=True)
@@ -166,16 +171,22 @@ class TestCreateDeployment:
         """Test creating a deployment."""
         # Mock version creation (called first)
         mock_version_response = {"versionNumber": 1}
-        mock_script_service.projects().versions().create().execute.return_value = mock_version_response
+        mock_script_service.projects().versions().create().execute.return_value = (
+            mock_version_response
+        )
 
         # Mock deployment creation (called second)
         mock_deploy_response = {
             "deploymentId": "deploy123",
             "deploymentConfig": {},
         }
-        mock_script_service.projects().deployments().create().execute.return_value = mock_deploy_response
+        mock_script_service.projects().deployments().create().execute.return_value = (
+            mock_deploy_response
+        )
 
-        with patch("appscript_mcp.tools.get_script_service", return_value=mock_script_service):
+        with patch(
+            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+        ):
             from appscript_mcp.tools import create_deployment
 
             result = await create_deployment("test123", "Test deployment")
@@ -200,9 +211,13 @@ class TestListDeployments:
                 }
             ]
         }
-        mock_script_service.projects().deployments().list().execute.return_value = mock_response
+        mock_script_service.projects().deployments().list().execute.return_value = (
+            mock_response
+        )
 
-        with patch("appscript_mcp.tools.get_script_service", return_value=mock_script_service):
+        with patch(
+            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+        ):
             from appscript_mcp.tools import list_deployments
 
             result = await list_deployments("test123")
@@ -219,7 +234,9 @@ class TestDeleteDeployment:
         """Test deleting a deployment."""
         mock_script_service.projects().deployments().delete().execute.return_value = {}
 
-        with patch("appscript_mcp.tools.get_script_service", return_value=mock_script_service):
+        with patch(
+            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+        ):
             from appscript_mcp.tools import delete_deployment
 
             result = await delete_deployment("test123", "deploy123")
@@ -245,7 +262,9 @@ class TestListScriptProcesses:
         }
         mock_script_service.processes().list().execute.return_value = mock_response
 
-        with patch("appscript_mcp.tools.get_script_service", return_value=mock_script_service):
+        with patch(
+            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+        ):
             from appscript_mcp.tools import list_script_processes
 
             result = await list_script_processes()

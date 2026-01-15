@@ -27,13 +27,31 @@ Lets AI build those for you:
 
 No more copy-pasting between your AI chat and script.google.com — the AI writes, deploys, and manages your scripts directly.
 
+## Why Use This?
+
+AI can't interact with web UIs. Without this MCP, the workflow is:
+
+1. AI generates code → 2. You copy it → 3. You paste into script.google.com → 4. You deploy manually → 5. You copy errors back → 6. Repeat
+
+With this MCP, AI has direct API access:
+
+| Without MCP | With MCP |
+|-------------|----------|
+| Copy-paste code snippets | Direct code deployment |
+| Manual deployment clicks | `create_deployment` |
+| Check execution logs manually | `list_script_processes` |
+| Can't see your existing projects | `list_script_projects` |
+| Can't read your current code | `get_script_content` |
+| Debug blindly | `get_script_metrics` shows failures |
+
 ## Features
 
 - **CRUD** — Create, read, update, delete Apps Script projects
 - **Code Editing** — View and modify script files (JavaScript, HTML, JSON)
 - **Execution** — Run script functions with parameters
 - **Deployments** — Create, list, update, and delete deployments
-- **Monitoring** — View recent script executions and their status
+- **Versions** — Create and manage immutable version snapshots
+- **Monitoring** — View executions, metrics, and analytics
 
 ## Tested With
 
@@ -61,6 +79,8 @@ uv sync  # or: pip install -e .
 ```
 
 ### 2. Setup Google Cloud (One-Time)
+
+This gives the MCP permission to access your Google Apps Script and Drive APIs on your behalf.
 
 <details>
 <summary><strong>Click to expand setup steps</strong></summary>
@@ -185,10 +205,18 @@ Credentials are cached in `~/.appscript-mcp/token.pickle` for future sessions.
 | `update_deployment` | Update deployment configuration |
 | `delete_deployment` | Delete a deployment |
 
+### Versions
+| Tool | Description |
+|------|-------------|
+| `list_versions` | List all versions of a script |
+| `create_version` | Create an immutable version snapshot |
+| `get_version` | Get details of a specific version |
+
 ### Monitoring
 | Tool | Description |
 |------|-------------|
 | `list_script_processes` | View recent script executions |
+| `get_script_metrics` | Get execution analytics (active users, executions, failures) |
 
 ### Triggers
 | Tool | Description |
@@ -251,6 +279,8 @@ Google enforces rate limits on the Apps Script API. If running many operations, 
 
 - [x] Trigger code generation (time-based, event-driven)
 - [x] Bound scripts support (Sheets, Docs, Forms, Slides)
+- [x] Version management (create, list, get versions)
+- [x] Execution metrics and analytics
 - [ ] PyPI package (`pip install appscript-mcp`)
 - [ ] Claude Desktop one-click install (DXT)
 

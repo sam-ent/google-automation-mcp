@@ -15,7 +15,11 @@ This extension provides tools to manage Google Apps Script projects.
 - **list_deployments** — List all deployments
 - **update_deployment** — Update deployment configuration
 - **delete_deployment** — Delete a deployment
+- **list_versions** — List all versions of a script
+- **create_version** — Create an immutable version snapshot
+- **get_version** — Get details of a specific version
 - **list_script_processes** — View recent script executions
+- **get_script_metrics** — Get execution analytics (active users, executions, failures)
 - **generate_trigger_code** — Generate Apps Script code for triggers
 
 ## Authentication
@@ -57,6 +61,9 @@ When the user asks to work with Apps Script, you can:
 - "Deploy my automation" → use `create_deployment`
 - "Run the sendReport function" → use `run_script_function`
 - "Why did my script fail?" → use `list_script_processes`
+- "Create a version snapshot before I deploy" → use `create_version`
+- "Show me all versions of this script" → use `list_versions`
+- "How many people are using my script?" → use `get_script_metrics`
 
 ## Limitations
 

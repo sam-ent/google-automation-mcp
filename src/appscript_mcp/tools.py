@@ -12,7 +12,6 @@ from typing import List, Dict, Any, Optional
 from googleapiclient.errors import HttpError
 
 from .auth import (
-    get_credentials,
     get_script_service,
     get_drive_service,
     start_auth_flow,
@@ -106,9 +105,7 @@ async def complete_google_auth(redirect_url: str) -> str:
     """
     flow = get_pending_flow()
     if flow is None:
-        return (
-            "No pending authentication flow. Please run start_google_auth first."
-        )
+        return "No pending authentication flow. Please run start_google_auth first."
 
     try:
         creds = complete_auth_flow(flow, redirect_url)
@@ -166,9 +163,7 @@ async def list_script_projects(
     if page_token:
         request_params["pageToken"] = page_token
 
-    response = await asyncio.to_thread(
-        service.files().list(**request_params).execute
-    )
+    response = await asyncio.to_thread(service.files().list(**request_params).execute)
 
     files = response.get("files", [])
 
@@ -404,7 +399,9 @@ async def run_script_function(
         if "error" in response:
             error_details = response["error"]
             error_message = error_details.get("message", "Unknown error")
-            return f"Execution failed\nFunction: {function_name}\nError: {error_message}"
+            return (
+                f"Execution failed\nFunction: {function_name}\nError: {error_message}"
+            )
 
         result = response.get("response", {}).get("result")
         output = [
@@ -582,6 +579,126 @@ async def delete_deployment(script_id: str, deployment_id: str) -> str:
 # ============================================================================
 
 
+# ============================================================================
+# Version Tools
+# ============================================================================
+
+
+@handle_errors
+async def list_versions(script_id: str) -> str:
+    """
+    List all versions of a script project.
+
+    Args:
+        script_id: The script project ID
+
+    Returns:
+        str: Formatted string with version list
+    """
+    service = get_script_service()
+
+    response = await asyncio.to_thread(
+        service.projects().versions().list(scriptId=script_id).execute
+    )
+
+    versions = response.get("versions", [])
+
+    if not versions:
+        return f"No versions found for script: {script_id}"
+
+    output = [f"Versions for script: {script_id}", ""]
+
+    for version in versions:
+        version_number = version.get("versionNumber", "Unknown")
+        description = version.get("description", "No description")
+        create_time = version.get("createTime", "Unknown")
+
+        output.append(f"Version {version_number}: {description}")
+        output.append(f"   Created: {create_time}")
+        output.append("")
+
+    return "\n".join(output)
+
+
+@handle_errors
+async def create_version(
+    script_id: str,
+    description: Optional[str] = None,
+) -> str:
+    """
+    Create a new immutable version of a script project.
+
+    Args:
+        script_id: The script project ID
+        description: Optional version description
+
+    Returns:
+        str: Formatted string with new version details
+    """
+    service = get_script_service()
+
+    request_body = {}
+    if description:
+        request_body["description"] = description
+
+    version = await asyncio.to_thread(
+        service.projects()
+        .versions()
+        .create(scriptId=script_id, body=request_body)
+        .execute
+    )
+
+    version_number = version.get("versionNumber", "Unknown")
+    create_time = version.get("createTime", "Unknown")
+
+    output = [
+        f"Created version {version_number} for script: {script_id}",
+        f"Description: {description or 'No description'}",
+        f"Created: {create_time}",
+    ]
+
+    return "\n".join(output)
+
+
+@handle_errors
+async def get_version(script_id: str, version_number: int) -> str:
+    """
+    Get details of a specific version.
+
+    Args:
+        script_id: The script project ID
+        version_number: The version number to retrieve
+
+    Returns:
+        str: Formatted string with version details
+    """
+    service = get_script_service()
+
+    version = await asyncio.to_thread(
+        service.projects()
+        .versions()
+        .get(scriptId=script_id, versionNumber=version_number)
+        .execute
+    )
+
+    ver_num = version.get("versionNumber", "Unknown")
+    description = version.get("description", "No description")
+    create_time = version.get("createTime", "Unknown")
+
+    output = [
+        f"Version {ver_num} of script: {script_id}",
+        f"Description: {description}",
+        f"Created: {create_time}",
+    ]
+
+    return "\n".join(output)
+
+
+# ============================================================================
+# Process Monitoring Tools
+# ============================================================================
+
+
 @handle_errors
 async def list_script_processes(
     page_size: int = 50,
@@ -625,5 +742,82 @@ async def list_script_processes(
         output.append(f"   Started: {start_time}")
         output.append(f"   Duration: {duration}")
         output.append("")
+
+    return "\n".join(output)
+
+
+# ============================================================================
+# Metrics Tools
+# ============================================================================
+
+
+@handle_errors
+async def get_script_metrics(
+    script_id: str,
+    metrics_granularity: str = "DAILY",
+) -> str:
+    """
+    Get execution metrics for a script project.
+
+    Args:
+        script_id: The script project ID
+        metrics_granularity: Granularity of metrics - "DAILY" or "WEEKLY"
+
+    Returns:
+        str: Formatted string with metrics data
+    """
+    service = get_script_service()
+
+    # Build the metrics filter
+    request_params = {
+        "scriptId": script_id,
+        "metricsGranularity": metrics_granularity,
+    }
+
+    response = await asyncio.to_thread(
+        service.projects().getMetrics(**request_params).execute
+    )
+
+    output = [
+        f"Metrics for script: {script_id}",
+        f"Granularity: {metrics_granularity}",
+        "",
+    ]
+
+    # Active users
+    active_users = response.get("activeUsers", [])
+    if active_users:
+        output.append("Active Users:")
+        for metric in active_users:
+            start_time = metric.get("startTime", "Unknown")
+            end_time = metric.get("endTime", "Unknown")
+            value = metric.get("value", "0")
+            output.append(f"  {start_time} to {end_time}: {value} users")
+        output.append("")
+
+    # Total executions
+    total_executions = response.get("totalExecutions", [])
+    if total_executions:
+        output.append("Total Executions:")
+        for metric in total_executions:
+            start_time = metric.get("startTime", "Unknown")
+            end_time = metric.get("endTime", "Unknown")
+            value = metric.get("value", "0")
+            output.append(f"  {start_time} to {end_time}: {value} executions")
+        output.append("")
+
+    # Failed executions
+    failed_executions = response.get("failedExecutions", [])
+    if failed_executions:
+        output.append("Failed Executions:")
+        for metric in failed_executions:
+            start_time = metric.get("startTime", "Unknown")
+            end_time = metric.get("endTime", "Unknown")
+            value = metric.get("value", "0")
+            output.append(f"  {start_time} to {end_time}: {value} failures")
+        output.append("")
+
+    if not active_users and not total_executions and not failed_executions:
+        output.append("No metrics data available for this script.")
 
     return "\n".join(output)

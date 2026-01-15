@@ -12,7 +12,7 @@ import os
 import pickle
 import logging
 from pathlib import Path
-from typing import Optional, Tuple, Union, Dict, Any
+from typing import Optional, Tuple, Dict, Any
 
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
@@ -28,6 +28,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/script.deployments",
     "https://www.googleapis.com/auth/script.deployments.readonly",
     "https://www.googleapis.com/auth/script.processes",
+    "https://www.googleapis.com/auth/script.metrics",  # For script analytics
     "https://www.googleapis.com/auth/drive.file",  # For listing and deleting script projects
     "https://www.googleapis.com/auth/userinfo.email",
     "openid",
@@ -36,7 +37,9 @@ SCOPES = [
 
 def get_credentials_dir() -> Path:
     """Get the directory for storing credentials."""
-    creds_dir = Path(os.environ.get("APPSCRIPT_CREDENTIALS_DIR", "~/.appscript-mcp")).expanduser()
+    creds_dir = Path(
+        os.environ.get("APPSCRIPT_CREDENTIALS_DIR", "~/.appscript-mcp")
+    ).expanduser()
     creds_dir.mkdir(parents=True, exist_ok=True)
     return creds_dir
 
