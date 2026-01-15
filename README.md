@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/sam-ent/appscript-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/appscript-mcp/actions/workflows/test.yml)
 
-**AI-powered Google Apps Script management via [Model Context Protocol](https://modelcontextprotocol.io)**
+**AI-powered Google Apps Script management for Claude, Cursor, and other MCP clients**
 
 Google's vision: *"Automate & extend Google Workspace"* and *"Power your scripts with AI."*
 This MCP makes that real — manage, write, deploy, and execute Apps Script projects through natural conversation.
@@ -33,13 +33,13 @@ This MCP makes that real — manage, write, deploy, and execute Apps Script proj
 - **Deployments** — Create, list, update, and delete deployments
 - **Monitoring** — View recent script executions and their status
 
-## Compatibility
+## Tested With
 
-Works with any MCP-compatible client:
-- [Claude Desktop](https://claude.ai/download)
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-- [Cursor](https://cursor.sh)
-- [Other MCP clients](https://modelcontextprotocol.io/clients)
+- **Claude Desktop** — macOS, Windows
+- **Claude Code** — CLI
+- **Cursor** — IDE
+
+Should work with any MCP-compatible client.
 
 ## Quick Start
 
