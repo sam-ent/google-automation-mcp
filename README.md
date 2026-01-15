@@ -62,7 +62,15 @@ uv sync  # or: pip install -e .
 
 2. **[Create OAuth Credentials](https://console.cloud.google.com/apis/credentials)** → Create Credentials → OAuth client ID → Desktop app → Download JSON
 
-3. **Save credentials:**
+3. **Configure credentials** (choose one):
+
+   **Option A: Environment variables** (recommended for Docker/CI)
+   ```bash
+   export GOOGLE_OAUTH_CLIENT_ID='your-client-id'
+   export GOOGLE_OAUTH_CLIENT_SECRET='your-client-secret'
+   ```
+
+   **Option B: JSON file** (simpler for local dev)
    ```bash
    mkdir -p ~/.appscript-mcp
    mv ~/Downloads/client_secret_*.json ~/.appscript-mcp/client_secret.json
