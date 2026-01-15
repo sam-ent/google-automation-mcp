@@ -25,7 +25,7 @@ Lets AI build those for you:
 "Write an automation that archives old Drive files monthly"
 ```
 
-No more context-switching between your AI assistant and script.google.com — the AI writes, deploys, and manages your scripts directly.
+No more copy-pasting between your AI chat and script.google.com — the AI writes, deploys, and manages your scripts directly.
 
 ## Features
 
