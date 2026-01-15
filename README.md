@@ -168,7 +168,7 @@ Credentials are cached in `~/.appscript-mcp/token.pickle` for future sessions.
 | `list_script_projects` | List all accessible Apps Script projects |
 | `get_script_project` | Get project details including all files |
 | `get_script_content` | Get content of a specific file |
-| `create_script_project` | Create a new project |
+| `create_script_project` | Create a new project (standalone or bound to Sheet/Doc/Form/Slides) |
 | `update_script_content` | Update files in a project |
 
 ### Execution
@@ -188,6 +188,42 @@ Credentials are cached in `~/.appscript-mcp/token.pickle` for future sessions.
 | Tool | Description |
 |------|-------------|
 | `list_script_processes` | View recent script executions |
+
+### Triggers
+| Tool | Description |
+|------|-------------|
+| `generate_trigger_code` | Generate Apps Script code for time-based or event triggers |
+
+## Bound Scripts
+
+Create scripts attached to Google Sheets, Docs, Forms, or Slides:
+
+```
+"Create a script bound to my spreadsheet https://docs.google.com/spreadsheets/d/ABC123/edit"
+```
+
+Pass the document ID as `parent_id` to `create_script_project`. Bound scripts can:
+- Add custom menus to the document
+- Use `onOpen` and `onEdit` simple triggers
+- Access `SpreadsheetApp.getActiveSpreadsheet()` directly
+
+## Triggers
+
+The Apps Script REST API cannot create triggers directly. Use `generate_trigger_code` to get code you can add to your script:
+
+```
+"Generate code for a daily trigger that runs sendReport at 9am"
+```
+
+**Supported trigger types:**
+- `time_minutes` — Run every 1, 5, 10, 15, or 30 minutes
+- `time_hours` — Run every 1, 2, 4, 6, 8, or 12 hours
+- `time_daily` — Run daily at a specific hour
+- `time_weekly` — Run weekly on a specific day
+- `on_open` — Run when document opens (simple trigger)
+- `on_edit` — Run when user edits (simple trigger)
+- `on_form_submit` — Run when form is submitted
+- `on_change` — Run when spreadsheet changes
 
 ## Limitations
 
@@ -212,10 +248,10 @@ Google enforces rate limits on the Apps Script API. If running many operations, 
 
 ## Roadmap
 
+- [x] Trigger code generation (time-based, event-driven)
+- [x] Bound scripts support (Sheets, Docs, Forms, Slides)
 - [ ] PyPI package (`pip install appscript-mcp`)
 - [ ] Claude Desktop one-click install (DXT)
-- [ ] Trigger management (time-based, event-driven)
-- [ ] Bound scripts support (Sheets, Docs, Forms)
 
 See [Issues](https://github.com/sam-ent/appscript-mcp/issues) to request features or report bugs.
 

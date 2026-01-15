@@ -119,11 +119,21 @@ async def create_script_project_tool(
     parent_id: str = "",
 ) -> str:
     """
-    Create a new Apps Script project.
+    Create a new Apps Script project (standalone or bound to a document).
 
     Args:
         title: Project title
-        parent_id: Optional Drive folder ID or bound container ID (e.g., Spreadsheet ID)
+        parent_id: Optional - the Google Drive ID of a container document to bind to.
+                   Leave empty for standalone scripts.
+
+                   To create a BOUND script, pass the ID of:
+                   - Google Sheet (from the URL: docs.google.com/spreadsheets/d/{ID}/edit)
+                   - Google Doc (from the URL: docs.google.com/document/d/{ID}/edit)
+                   - Google Form (from the URL: docs.google.com/forms/d/{ID}/edit)
+                   - Google Slides (from the URL: docs.google.com/presentation/d/{ID}/edit)
+
+                   Bound scripts can use document-specific features like custom menus,
+                   onOpen triggers, and getActiveSpreadsheet().
     """
     return await create_script_project(
         title=title,
@@ -265,6 +275,258 @@ async def list_script_processes_tool(
         page_size=page_size,
         script_id=script_id if script_id else None,
     )
+
+
+# ============================================================================
+# Trigger Helper Tools
+# ============================================================================
+
+
+@mcp.tool()
+async def generate_trigger_code(
+    trigger_type: str,
+    function_name: str,
+    schedule: str = "",
+) -> str:
+    """
+    Generate Apps Script code for creating triggers.
+
+    The Apps Script API cannot create triggers directly - they must be created
+    from within Apps Script itself. This tool generates the code you need.
+
+    Args:
+        trigger_type: Type of trigger. One of:
+                      - "time_minutes" (run every N minutes: 1, 5, 10, 15, 30)
+                      - "time_hours" (run every N hours: 1, 2, 4, 6, 8, 12)
+                      - "time_daily" (run daily at a specific hour: 0-23)
+                      - "time_weekly" (run weekly on a specific day)
+                      - "on_open" (simple trigger - runs when document opens)
+                      - "on_edit" (simple trigger - runs when user edits)
+                      - "on_form_submit" (runs when form is submitted)
+                      - "on_change" (runs when content changes)
+
+        function_name: The function to run when trigger fires (e.g., "sendDailyReport")
+
+        schedule: Schedule details (depends on trigger_type):
+                  - For time_minutes: "1", "5", "10", "15", or "30"
+                  - For time_hours: "1", "2", "4", "6", "8", or "12"
+                  - For time_daily: hour as "0"-"23" (e.g., "9" for 9am)
+                  - For time_weekly: "MONDAY", "TUESDAY", etc.
+                  - For simple triggers (on_open, on_edit): not needed
+
+    Returns:
+        Apps Script code to create the trigger. User should add this to their script
+        and run the setup function once to install the trigger.
+    """
+    code_lines = []
+
+    if trigger_type == "on_open":
+        code_lines = [
+            f"// Simple trigger - just rename your function to 'onOpen'",
+            f"// This runs automatically when the document is opened",
+            f"function onOpen(e) {{",
+            f"  {function_name}();",
+            f"}}",
+        ]
+    elif trigger_type == "on_edit":
+        code_lines = [
+            f"// Simple trigger - just rename your function to 'onEdit'",
+            f"// This runs automatically when a user edits the spreadsheet",
+            f"function onEdit(e) {{",
+            f"  {function_name}();",
+            f"}}",
+        ]
+    elif trigger_type == "time_minutes":
+        interval = schedule or "5"
+        code_lines = [
+            f"// Run this function ONCE to install the trigger",
+            f"function createTimeTrigger_{function_name}() {{",
+            f"  // Delete existing triggers for this function first",
+            f"  const triggers = ScriptApp.getProjectTriggers();",
+            f"  triggers.forEach(trigger => {{",
+            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
+            f"      ScriptApp.deleteTrigger(trigger);",
+            f"    }}",
+            f"  }});",
+            f"",
+            f"  // Create new trigger - runs every {interval} minutes",
+            f"  ScriptApp.newTrigger('{function_name}')",
+            f"    .timeBased()",
+            f"    .everyMinutes({interval})",
+            f"    .create();",
+            f"",
+            f"  Logger.log('Trigger created: {function_name} will run every {interval} minutes');",
+            f"}}",
+        ]
+    elif trigger_type == "time_hours":
+        interval = schedule or "1"
+        code_lines = [
+            f"// Run this function ONCE to install the trigger",
+            f"function createTimeTrigger_{function_name}() {{",
+            f"  // Delete existing triggers for this function first",
+            f"  const triggers = ScriptApp.getProjectTriggers();",
+            f"  triggers.forEach(trigger => {{",
+            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
+            f"      ScriptApp.deleteTrigger(trigger);",
+            f"    }}",
+            f"  }});",
+            f"",
+            f"  // Create new trigger - runs every {interval} hour(s)",
+            f"  ScriptApp.newTrigger('{function_name}')",
+            f"    .timeBased()",
+            f"    .everyHours({interval})",
+            f"    .create();",
+            f"",
+            f"  Logger.log('Trigger created: {function_name} will run every {interval} hour(s)');",
+            f"}}",
+        ]
+    elif trigger_type == "time_daily":
+        hour = schedule or "9"
+        code_lines = [
+            f"// Run this function ONCE to install the trigger",
+            f"function createDailyTrigger_{function_name}() {{",
+            f"  // Delete existing triggers for this function first",
+            f"  const triggers = ScriptApp.getProjectTriggers();",
+            f"  triggers.forEach(trigger => {{",
+            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
+            f"      ScriptApp.deleteTrigger(trigger);",
+            f"    }}",
+            f"  }});",
+            f"",
+            f"  // Create new trigger - runs daily at {hour}:00",
+            f"  ScriptApp.newTrigger('{function_name}')",
+            f"    .timeBased()",
+            f"    .atHour({hour})",
+            f"    .everyDays(1)",
+            f"    .create();",
+            f"",
+            f"  Logger.log('Trigger created: {function_name} will run daily at {hour}:00');",
+            f"}}",
+        ]
+    elif trigger_type == "time_weekly":
+        day = schedule.upper() if schedule else "MONDAY"
+        code_lines = [
+            f"// Run this function ONCE to install the trigger",
+            f"function createWeeklyTrigger_{function_name}() {{",
+            f"  // Delete existing triggers for this function first",
+            f"  const triggers = ScriptApp.getProjectTriggers();",
+            f"  triggers.forEach(trigger => {{",
+            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
+            f"      ScriptApp.deleteTrigger(trigger);",
+            f"    }}",
+            f"  }});",
+            f"",
+            f"  // Create new trigger - runs weekly on {day}",
+            f"  ScriptApp.newTrigger('{function_name}')",
+            f"    .timeBased()",
+            f"    .onWeekDay(ScriptApp.WeekDay.{day})",
+            f"    .atHour(9)",
+            f"    .create();",
+            f"",
+            f"  Logger.log('Trigger created: {function_name} will run every {day} at 9:00');",
+            f"}}",
+        ]
+    elif trigger_type == "on_form_submit":
+        code_lines = [
+            f"// Run this function ONCE to install the trigger",
+            f"// This must be run from a script BOUND to the Google Form",
+            f"function createFormSubmitTrigger_{function_name}() {{",
+            f"  // Delete existing triggers for this function first",
+            f"  const triggers = ScriptApp.getProjectTriggers();",
+            f"  triggers.forEach(trigger => {{",
+            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
+            f"      ScriptApp.deleteTrigger(trigger);",
+            f"    }}",
+            f"  }});",
+            f"",
+            f"  // Create new trigger - runs when form is submitted",
+            f"  ScriptApp.newTrigger('{function_name}')",
+            f"    .forForm(FormApp.getActiveForm())",
+            f"    .onFormSubmit()",
+            f"    .create();",
+            f"",
+            f"  Logger.log('Trigger created: {function_name} will run on form submit');",
+            f"}}",
+        ]
+    elif trigger_type == "on_change":
+        code_lines = [
+            f"// Run this function ONCE to install the trigger",
+            f"// This must be run from a script BOUND to a Google Sheet",
+            f"function createChangeTrigger_{function_name}() {{",
+            f"  // Delete existing triggers for this function first",
+            f"  const triggers = ScriptApp.getProjectTriggers();",
+            f"  triggers.forEach(trigger => {{",
+            f"    if (trigger.getHandlerFunction() === '{function_name}') {{",
+            f"      ScriptApp.deleteTrigger(trigger);",
+            f"    }}",
+            f"  }});",
+            f"",
+            f"  // Create new trigger - runs when spreadsheet changes",
+            f"  ScriptApp.newTrigger('{function_name}')",
+            f"    .forSpreadsheet(SpreadsheetApp.getActive())",
+            f"    .onChange()",
+            f"    .create();",
+            f"",
+            f"  Logger.log('Trigger created: {function_name} will run on spreadsheet change');",
+            f"}}",
+        ]
+    else:
+        return (
+            f"Unknown trigger type: {trigger_type}\n\n"
+            "Valid types: time_minutes, time_hours, time_daily, time_weekly, "
+            "on_open, on_edit, on_form_submit, on_change"
+        )
+
+    code = "\n".join(code_lines)
+
+    instructions = []
+    if trigger_type.startswith("on_"):
+        if trigger_type in ("on_open", "on_edit"):
+            instructions = [
+                "SIMPLE TRIGGER",
+                "=" * 50,
+                "",
+                "Add this code to your script. Simple triggers run automatically",
+                "when the event occurs - no setup function needed.",
+                "",
+                "Note: Simple triggers have limitations:",
+                "- Cannot access services that require authorization",
+                "- Cannot run longer than 30 seconds",
+                "- Cannot make external HTTP requests",
+                "",
+                "For more capabilities, use an installable trigger instead.",
+                "",
+                "CODE TO ADD:",
+                "-" * 50,
+            ]
+        else:
+            instructions = [
+                "INSTALLABLE TRIGGER",
+                "=" * 50,
+                "",
+                "1. Add this code to your script",
+                f"2. Run the setup function once: createFormSubmitTrigger_{function_name}() or similar",
+                "3. The trigger will then run automatically",
+                "",
+                "CODE TO ADD:",
+                "-" * 50,
+            ]
+    else:
+        instructions = [
+            "INSTALLABLE TRIGGER",
+            "=" * 50,
+            "",
+            "1. Add this code to your script using update_script_content",
+            f"2. Run the setup function ONCE (manually in Apps Script editor or via run_script_function)",
+            "3. The trigger will then run automatically on schedule",
+            "",
+            "To check installed triggers: Apps Script editor → Triggers (clock icon)",
+            "",
+            "CODE TO ADD:",
+            "-" * 50,
+        ]
+
+    return "\n".join(instructions) + "\n\n" + code
 
 
 # ============================================================================
