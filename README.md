@@ -133,7 +133,7 @@ update_script_content(script_id="...", files=[{
 
 ## Limitations
 
-**`run_script_function`** requires manual setup: Open script at script.google.com → Project Settings → Change GCP project → Deploy as API Executable. All other tools work without this.
+**`run_script_function`** requires one-time setup per script: Open script at script.google.com → Project Settings → Change GCP project → Deploy as API Executable. Once configured, functions can be called repeatedly. All other tools work without this setup.
 
 **API quotas**: Google enforces [rate limits](https://developers.google.com/apps-script/guides/services/quotas).
 
