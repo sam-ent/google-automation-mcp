@@ -50,10 +50,10 @@ Claude writes the code, deploys it to Google's cloud, and sets up triggers — a
 Claude can see your actual Gmail, Drive, and Sheets data while building automations — no guessing.
 
 **OAuth & Credentials:**
-- **Environment variables** — Configure via `GOOGLE_OAUTH_CLIENT_ID` + `GOOGLE_OAUTH_CLIENT_SECRET` (recommended for Docker/CI)
-- **JSON file fallback** — Or use `client_secret.json` for local dev
-- **Automatic token refresh** — Tokens refresh automatically when expired, no manual intervention
-- **Headless auth** — Full OAuth flow without a browser (`appscript-mcp auth --headless`)
+- **clasp authentication** — No GCP project needed, uses Google's official CLI
+- **Automatic token refresh** — Tokens refresh automatically when expired
+- **Secure storage** — Tokens stored in `~/.secrets/appscript-mcp/` with restricted permissions
+- **Legacy support** — Environment variables or JSON file for advanced users
 
 ## Tested With
 
@@ -90,12 +90,26 @@ cd appscript-mcp
 uv sync  # then use 'uv run appscript-mcp'
 ```
 
-### 2. Setup Google Cloud (One-Time)
+### 2. Authenticate
 
-This gives the MCP permission to access your Google Apps Script and Drive APIs on your behalf.
+**With clasp (recommended — no GCP project needed):**
+```bash
+uvx appscript-mcp auth
+```
+
+This uses [clasp](https://github.com/google/clasp), Google's official Apps Script CLI. If clasp isn't installed, the command will offer to install it for you.
+
+The authentication flow:
+1. Opens your browser for Google OAuth
+2. You consent to the required permissions
+3. Tokens are saved securely to `~/.secrets/appscript-mcp/`
+
+That's it. No GCP project, no API enabling, no client secrets.
 
 <details>
-<summary><strong>Click to expand setup steps</strong></summary>
+<summary><strong>Alternative: Legacy OAuth (advanced users)</strong></summary>
+
+If you need headless authentication or want to use your own GCP project:
 
 1. **[Enable APIs](https://console.cloud.google.com/flows/enableapi?apiid=script.googleapis.com,drive.googleapis.com)** — Click link, select your project, enable.
 
@@ -103,39 +117,32 @@ This gives the MCP permission to access your Google Apps Script and Drive APIs o
 
 3. **Configure credentials** (choose one):
 
-   **Option A: Environment variables** (recommended)
+   **Option A: Environment variables**
    ```bash
    export GOOGLE_OAUTH_CLIENT_ID='your-client-id'
    export GOOGLE_OAUTH_CLIENT_SECRET='your-client-secret'
    ```
-   Best for: Docker, CI/CD, cloud deployments, sharing config across machines.
 
-   **Option B: JSON file** (simpler for local dev)
+   **Option B: JSON file**
    ```bash
    mkdir -p ~/.appscript-mcp
    mv ~/Downloads/client_secret_*.json ~/.appscript-mcp/client_secret.json
    ```
-   Or set `GOOGLE_CLIENT_SECRET_PATH` to a custom location.
 
 4. **[Add yourself as test user](https://console.cloud.google.com/apis/credentials/consent)** — OAuth consent screen → Test users → Add your email
 
+5. **Authenticate:**
+   ```bash
+   # With browser
+   uvx appscript-mcp auth --legacy
+
+   # Headless (SSH, remote server)
+   uvx appscript-mcp auth --legacy --headless
+   ```
+
 </details>
 
-### 3. Authenticate
-
-**If you have a browser** (local machine, X11, etc.):
-```bash
-uvx appscript-mcp auth
-```
-Opens your browser, you consent, done.
-
-**If headless** (SSH, remote server, container):
-```bash
-uvx appscript-mcp auth --headless
-```
-Prints a URL. Open it in any browser, consent, paste the redirect URL back.
-
-### 4. Configure MCP Client
+### 3. Configure MCP Client
 
 **Claude Desktop** — Add to config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
@@ -168,7 +175,7 @@ Prints a URL. Open it in any browser, consent, paste the redirect URL back.
 }
 ```
 
-### 5. Start Using
+### 4. Start Using
 
 ```
 "List my Apps Script projects"
@@ -178,15 +185,17 @@ Prints a URL. Open it in any browser, consent, paste the redirect URL back.
 
 ## Authentication Reference
 
-Three ways to authenticate, all produce the same result:
-
 | Method | When to Use |
 |--------|-------------|
-| `appscript-mcp auth` | Local machine with browser access |
-| `appscript-mcp auth --headless` | SSH/remote without local browser |
-| In-conversation (`start_google_auth`) | When you forgot to auth before starting |
+| `appscript-mcp auth` | Default — uses clasp, no GCP project needed |
+| `appscript-mcp auth --legacy` | Use your own GCP OAuth credentials |
+| `appscript-mcp auth --legacy --headless` | Headless environments with custom credentials |
+| In-conversation (`start_google_auth`) | Re-authenticate without leaving the conversation |
 
-Credentials are cached in `~/.appscript-mcp/token.pickle` for future sessions.
+**Token storage:**
+- Primary: `~/.secrets/appscript-mcp/token.json` (secure, 600 permissions)
+- clasp tokens: Read from `~/.clasprc.json` and copied to secure storage
+- Legacy: `~/.appscript-mcp/token.pickle` (auto-migrated to secure storage)
 
 ## Available Tools
 
@@ -297,6 +306,8 @@ Google enforces rate limits on the Apps Script API. If running many operations, 
 - [x] Execution metrics and analytics
 - [x] PyPI package (`uvx appscript-mcp`)
 - [x] Google Workspace context (Gmail, Drive, Sheets, Calendar, Docs)
+- [x] clasp authentication (no GCP project needed)
+- [x] Secure token storage (`~/.secrets/` with 600 permissions)
 - [ ] Claude Desktop one-click install (DXT)
 
 See [Issues](https://github.com/sam-ent/appscript-mcp/issues) to request features or report bugs.
