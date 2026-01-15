@@ -32,6 +32,7 @@ dev = [
 
 [project.scripts]
 google-automation-mcp = "google_automation_mcp.cli:main"
+gmcp = "google_automation_mcp.cli:main"
 
 [build-system]
 requires = ["hatchling"]

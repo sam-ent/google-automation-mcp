@@ -10,16 +10,11 @@ Uses [clasp](https://github.com/google/clasp) for authentication. No GCP console
 ## Quick Start
 
 ```bash
-# 1. Install
-uvx google-automation-mcp
-
-# 2. Authenticate (opens browser once, then tokens auto-refresh)
-uvx google-automation-mcp auth
-
-# 3. Add to your MCP client config and start using
+uvx google-automation-mcp        # Install and run
+uvx google-automation-mcp auth   # Authenticate (one-time browser sign-in)
 ```
 
-That's it. No GCP project setup.
+That's it. No GCP project setup. Tokens auto-refresh after initial auth.
 
 ## Why No GCP Project?
 
@@ -148,13 +143,15 @@ google-automation-mcp auth --oauth21
 
 ## CLI Reference
 
+Short alias: `gmcp` (or full name: `google-automation-mcp`)
+
 ```bash
-google-automation-mcp           # Run server
-google-automation-mcp setup     # Interactive setup wizard
-google-automation-mcp auth      # Authenticate with clasp
-google-automation-mcp auth --oauth21  # OAuth 2.1 for production
-google-automation-mcp status    # Check auth status
-google-automation-mcp version   # Show version
+gmcp                 # Run server
+gmcp setup           # Interactive setup wizard
+gmcp auth            # Authenticate with clasp
+gmcp auth --oauth21  # OAuth 2.1 for production
+gmcp status          # Check auth status
+gmcp version         # Show version
 ```
 
 ## Development
