@@ -821,3 +821,149 @@ async def get_script_metrics(
         output.append("No metrics data available for this script.")
 
     return "\n".join(output)
+
+
+# ============================================================================
+# Trigger Code Generator
+# ============================================================================
+
+
+async def generate_trigger_code(
+    trigger_type: str,
+    function_name: str,
+    schedule: str = "",
+) -> str:
+    """
+    Generate Apps Script code for creating triggers.
+
+    The Apps Script API cannot create triggers directly - they must be created
+    from within Apps Script itself. This generates code to push via update_script_content,
+    then run the setup function via run_script_function or manually.
+
+    Args:
+        trigger_type: Type of trigger:
+            - "time_minutes" (1, 5, 10, 15, 30)
+            - "time_hours" (1, 2, 4, 6, 8, 12)
+            - "time_daily" (hour 0-23)
+            - "time_weekly" (MONDAY, TUESDAY, etc.)
+            - "on_open" (document open)
+            - "on_edit" (user edit)
+            - "on_form_submit" (form submission)
+            - "on_change" (content change)
+        function_name: Function to call when trigger fires
+        schedule: Schedule value (depends on trigger_type)
+
+    Returns:
+        str: Apps Script code to add to project and run once
+    """
+    trigger_type = trigger_type.lower()
+
+    # Build the trigger creation code based on type
+    if trigger_type == "time_minutes":
+        minutes = schedule or "5"
+        valid_minutes = ["1", "5", "10", "15", "30"]
+        if minutes not in valid_minutes:
+            return f"Error: time_minutes schedule must be one of {valid_minutes}"
+        trigger_code = f"""ScriptApp.newTrigger('{function_name}')
+      .timeBased()
+      .everyMinutes({minutes})
+      .create();"""
+
+    elif trigger_type == "time_hours":
+        hours = schedule or "1"
+        valid_hours = ["1", "2", "4", "6", "8", "12"]
+        if hours not in valid_hours:
+            return f"Error: time_hours schedule must be one of {valid_hours}"
+        trigger_code = f"""ScriptApp.newTrigger('{function_name}')
+      .timeBased()
+      .everyHours({hours})
+      .create();"""
+
+    elif trigger_type == "time_daily":
+        hour = schedule or "9"
+        try:
+            hour_int = int(hour)
+            if not 0 <= hour_int <= 23:
+                raise ValueError()
+        except ValueError:
+            return "Error: time_daily schedule must be hour 0-23"
+        trigger_code = f"""ScriptApp.newTrigger('{function_name}')
+      .timeBased()
+      .atHour({hour})
+      .everyDays(1)
+      .create();"""
+
+    elif trigger_type == "time_weekly":
+        day = (schedule or "MONDAY").upper()
+        valid_days = [
+            "MONDAY",
+            "TUESDAY",
+            "WEDNESDAY",
+            "THURSDAY",
+            "FRIDAY",
+            "SATURDAY",
+            "SUNDAY",
+        ]
+        if day not in valid_days:
+            return f"Error: time_weekly schedule must be one of {valid_days}"
+        trigger_code = f"""ScriptApp.newTrigger('{function_name}')
+      .timeBased()
+      .onWeekDay(ScriptApp.WeekDay.{day})
+      .create();"""
+
+    elif trigger_type == "on_open":
+        trigger_code = f"""ScriptApp.newTrigger('{function_name}')
+      .forSpreadsheet(SpreadsheetApp.getActive())
+      .onOpen()
+      .create();"""
+
+    elif trigger_type == "on_edit":
+        trigger_code = f"""ScriptApp.newTrigger('{function_name}')
+      .forSpreadsheet(SpreadsheetApp.getActive())
+      .onEdit()
+      .create();"""
+
+    elif trigger_type == "on_form_submit":
+        trigger_code = f"""ScriptApp.newTrigger('{function_name}')
+      .forForm(FormApp.getActiveForm())
+      .onFormSubmit()
+      .create();"""
+
+    elif trigger_type == "on_change":
+        trigger_code = f"""ScriptApp.newTrigger('{function_name}')
+      .forSpreadsheet(SpreadsheetApp.getActive())
+      .onChange()
+      .create();"""
+
+    else:
+        return f"Error: Unknown trigger_type '{trigger_type}'. Valid types: time_minutes, time_hours, time_daily, time_weekly, on_open, on_edit, on_form_submit, on_change"
+
+    # Generate complete setup code
+    setup_code = f"""/**
+ * Setup trigger for {function_name}
+ * Run this function ONCE to install the trigger.
+ * After running, you can delete this function.
+ */
+function setupTrigger_{function_name}() {{
+  // Remove existing triggers for this function first
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {{
+    if (triggers[i].getHandlerFunction() === '{function_name}') {{
+      ScriptApp.deleteTrigger(triggers[i]);
+    }}
+  }}
+
+  // Create new trigger
+  {trigger_code}
+
+  Logger.log('Trigger created for {function_name}');
+}}
+"""
+
+    return (
+        f"Generated trigger setup code for '{function_name}' ({trigger_type}):\n\n"
+        f"```javascript\n{setup_code}```\n\n"
+        f"**Next steps:**\n"
+        f"1. Use update_script_content to add this code to your project\n"
+        f"2. Run setupTrigger_{function_name}() once via run_script_function (requires API Executable deployment) or manually in the Apps Script editor"
+    )

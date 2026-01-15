@@ -1,5 +1,5 @@
 """
-Authentication system for appscript-mcp.
+Authentication system for google-automation-mcp.
 
 Supports multiple auth methods:
 - clasp (easiest, no GCP project needed)

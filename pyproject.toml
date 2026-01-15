@@ -1,11 +1,11 @@
 [project]
-name = "appscript-mcp"
-version = "0.3.2"
-description = "MCP server for Google Apps Script - create, manage, and execute Apps Script projects"
+name = "google-automation-mcp"
+version = "0.5.0"
+description = "Headless Google Workspace automation for AI - Apps Script, Gmail, Drive, Sheets, Calendar, Docs"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
-keywords = ["mcp", "google", "apps-script", "automation"]
+keywords = ["mcp", "google", "apps-script", "automation", "workspace", "gmail", "drive", "sheets", "calendar", "ai"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -31,14 +31,14 @@ dev = [
 ]
 
 [project.scripts]
-appscript-mcp = "appscript_mcp.cli:main"
+google-automation-mcp = "google_automation_mcp.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/appscript_mcp"]
+packages = ["src/google_automation_mcp"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -1,12 +1,12 @@
 """
-Google OAuth Authentication for appscript-mcp
+Google OAuth Authentication for google-automation-mcp
 
 Supports multiple authentication methods:
 1. clasp - easiest, no GCP project needed, uses Google's official Apps Script CLI
 2. OAuth 2.0 - legacy, requires GCP project
 3. OAuth 2.1 with PKCE - production, multi-user
 
-Tokens are stored per-user in ~/.secrets/appscript-mcp/credentials/
+Tokens are stored per-user in ~/.secrets/google-automation-mcp/credentials/
 
 Forked from google_workspace_mcp/auth/google_auth.py with clasp additions.
 """
@@ -313,7 +313,7 @@ def get_client_config() -> Optional[Dict[str, Any]]:
     client_secret_paths = [
         Path(os.getenv("GOOGLE_CLIENT_SECRET_PATH", "")),
         Path.home() / ".secrets" / "client_secret.json",
-        Path.home() / ".appscript-mcp" / "client_secret.json",
+        Path.home() / ".google-automation-mcp" / "client_secret.json",
         Path("client_secret.json"),
     ]
 
@@ -349,7 +349,7 @@ def create_oauth_flow(scopes: Optional[list] = None) -> Flow:
         raise ValueError(
             "No OAuth credentials found.\n\n"
             "Use clasp (easiest):\n"
-            "  appscript-mcp setup\n\n"
+            "  google-automation-mcp setup\n\n"
             "Or set environment variables:\n"
             "  export GOOGLE_OAUTH_CLIENT_ID='your-client-id'\n"
             "  export GOOGLE_OAUTH_CLIENT_SECRET='your-client-secret'"
@@ -461,7 +461,7 @@ def get_service(
         credentials = get_credentials()
 
     if credentials is None:
-        raise ValueError("No valid credentials. Run: appscript-mcp setup")
+        raise ValueError("No valid credentials. Run: google-automation-mcp setup")
 
     return build(service_name, version, credentials=credentials)
 

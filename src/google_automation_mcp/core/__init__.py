@@ -1,5 +1,5 @@
 """
-Core utilities for appscript-mcp.
+Core utilities for google-automation-mcp.
 
 Forked from google_workspace_mcp with attribution.
 """

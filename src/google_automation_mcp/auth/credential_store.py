@@ -1,5 +1,5 @@
 """
-Credential Store for appscript-mcp
+Credential Store for google-automation-mcp
 
 Provides a standardized interface for credential storage and retrieval,
 supporting per-user credentials with secure file permissions.
@@ -20,7 +20,7 @@ from google.oauth2.credentials import Credentials
 logger = logging.getLogger(__name__)
 
 # Secure credentials directory
-DEFAULT_CREDENTIALS_DIR = Path.home() / ".secrets" / "appscript-mcp" / "credentials"
+DEFAULT_CREDENTIALS_DIR = Path.home() / ".secrets" / "google-automation-mcp" / "credentials"
 
 
 class CredentialStore(ABC):
@@ -81,7 +81,7 @@ class SecureCredentialStore(CredentialStore):
     """
     Credential store that uses local JSON files with secure permissions (600).
 
-    Stores credentials in ~/.secrets/appscript-mcp/credentials/{email}.json
+    Stores credentials in ~/.secrets/google-automation-mcp/credentials/{email}.json
     """
 
     def __init__(self, base_dir: Optional[Path] = None):
@@ -90,7 +90,7 @@ class SecureCredentialStore(CredentialStore):
 
         Args:
             base_dir: Base directory for credential files. If None, uses
-                     ~/.secrets/appscript-mcp/credentials/
+                     ~/.secrets/google-automation-mcp/credentials/
         """
         if base_dir is None:
             # Check for environment variable override

@@ -1,5 +1,5 @@
 """
-Interactive Setup for appscript-mcp
+Interactive Setup for google-automation-mcp
 
 Guides users through authentication setup with environment detection
 and sensible defaults.
@@ -375,7 +375,7 @@ def run_setup() -> bool:
         print("\n" + "=" * 50)
         print("Setup Complete!")
         print("=" * 50)
-        print("\nYou can now use appscript-mcp with your MCP client.")
+        print("\nYou can now use google-automation-mcp with your MCP client.")
         print("Example prompts:")
         print('  "List my Apps Script projects"')
         print('  "Show my recent Gmail messages"')
@@ -384,6 +384,6 @@ def run_setup() -> bool:
         print("\n" + "=" * 50)
         print("Setup Incomplete")
         print("=" * 50)
-        print("\nRun 'appscript-mcp setup' again to complete setup.")
+        print("\nRun 'google-automation-mcp setup' again to complete setup.")
 
     return success

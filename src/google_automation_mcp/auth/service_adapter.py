@@ -53,7 +53,7 @@ def get_service_for_user(
     else:
         credentials = get_credentials()
         if credentials is None:
-            raise ValueError("No valid credentials. Run: appscript-mcp setup")
+            raise ValueError("No valid credentials. Run: google-automation-mcp setup")
 
     return build(service_name, version, credentials=credentials)
 

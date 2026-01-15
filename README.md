@@ -1,371 +1,305 @@
-# Apps Script MCP
+# Google Automation MCP
 
-[![PyPI](https://img.shields.io/pypi/v/appscript-mcp)](https://pypi.org/project/appscript-mcp/)
-[![Tests](https://github.com/sam-ent/appscript-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/appscript-mcp/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/google-automation-mcp)](https://pypi.org/project/google-automation-mcp/)
+[![Tests](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml)
 
-**Built for AI.** Give Claude a remote control to your Google account. Create, deploy, and run Apps Script automations directly — no copy-paste, no manual setup.
+**Google Workspace APIs for AI agents.** 50 tools for Gmail, Drive, Sheets, Calendar, Docs, and Apps Script — with zero GCP setup and credentials never exposed to AI.
 
-> **Tip:** View on [GitHub](https://github.com/sam-ent/appscript-mcp) for copy buttons on code blocks.
+## Why This MCP?
 
-## Why This Exists
-
-Direct Google APIs are designed for software. This MCP is designed for AI.
-
-| | Direct APIs (You code) | This MCP (Claude codes) |
+| | Direct Google APIs | This MCP |
 |---|---|---|
-| **Setup** | Local dev environment, OAuth libraries | One-time auth, Claude handles the rest |
-| **Runtime** | Scripts run on your machine | Scripts run in Google's cloud |
-| **Workflow** | Claude writes → you copy → you debug | Claude writes → Claude deploys → Claude tests |
-| **Triggers** | Need a server running 24/7 | Native Apps Script triggers in the cloud |
-| **Scope** | Limited to specific APIs | Full Apps Script (MailApp, DriveApp, etc.) |
+| **Setup** | Create GCP project → Enable APIs → OAuth consent screen → Create credentials → Download JSON | `google-automation-mcp auth` — uses [clasp](https://github.com/google/clasp), no GCP project needed |
+| **Credentials** | AI agent sees and handles tokens directly | AI never sees credentials — MCP handles auth internally |
+| **API Surface** | AI can call any endpoint | AI limited to 50 curated, auditable operations |
+| **Token Refresh** | Implement refresh logic per API call | Auth once, auto-refresh forever |
+| **Multi-user** | Build credential storage yourself | Built-in per-user credential management |
 
-## What You Can Build
-
-```
-"Every day at 9 AM, scan my Invoices folder in Drive, extract totals to this Sheet, and email me a summary"
-"When someone submits my Google Form, generate a Doc from a template and email it to them"
-"Add a custom function to my spreadsheet that validates email formats"
-"Archive Drive files older than 90 days to a backup folder every week"
-```
-
-Claude writes the code, deploys it to Google's cloud, and sets up triggers — all running 24/7 without your computer on.
-
-## Features
-
-**Zero-friction Setup:**
-- **No GCP project required** — Uses clasp (Google's official CLI) for OAuth
-- **One-line install** — `uvx appscript-mcp` runs directly from PyPI
-- **Interactive setup wizard** — Detects your environment and guides you through auth
-- **Works out of the box** — No API enabling, no client secrets, no consent screens
-
-**Production-ready Authentication:**
-- **Automatic token refresh** — Never manually refresh tokens
-- **Multi-user support** — Per-user credential storage for team/production use
-- **OAuth 2.1 with PKCE** — Modern, secure auth for multi-user deployments
-- **Secure storage** — Credentials stored with 600 permissions (owner-only)
-- **Flexible auth options** — clasp (easiest), OAuth 2.1 (production), or legacy OAuth
-
-**Full Apps Script Management:**
-- **CRUD** — Create, read, update, delete Apps Script projects
-- **Code Editing** — View and modify script files (JavaScript, HTML, JSON)
-- **Execution** — Run script functions with parameters
-- **Deployments** — Create, list, update, and delete deployments
-- **Versions** — Create and manage immutable version snapshots
-- **Monitoring** — View executions, metrics, and analytics
-
-## Tested With
-
-- **Claude Desktop** — macOS, Windows
-- **Claude Code** — CLI
-- **Cursor** — IDE
-- **Gemini CLI** — Google's AI CLI
-
-Should work with any MCP-compatible client.
+**Summary:** Uses clasp for zero GCP setup. Auth once. AI never sees credentials. 50 curated tools.
 
 ## Quick Start
 
 ### 1. Install
 
-**Instant (no clone needed):**
 ```bash
-uvx appscript-mcp  # runs directly from PyPI
+uvx google-automation-mcp
 ```
 
-**Global install:**
+### 2. Authenticate
+
 ```bash
-uv tool install appscript-mcp  # installs 'appscript-mcp' command
+uvx google-automation-mcp auth
+```
+
+Opens browser for Google sign-in. Tokens auto-refresh after that.
+
+### 3. Configure Your MCP Client
+
+**Claude Code** (`~/.mcp.json`):
+```json
+{
+  "mcpServers": {
+    "google": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["google-automation-mcp"]
+    }
+  }
+}
+```
+
+**Claude Desktop** (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "google": {
+      "command": "uvx",
+      "args": ["google-automation-mcp"]
+    }
+  }
+}
 ```
 
 **Gemini CLI:**
 ```bash
-gemini extensions install github:sam-ent/appscript-mcp
+gemini extensions install github:sam-ent/google-automation-mcp
 ```
 
-**From source:**
+## Zero GCP Setup with clasp
+
+The main advantage: **authenticate without creating a GCP project.**
+
+Traditional Google API setup:
+1. Create GCP project
+2. Enable APIs
+3. Configure OAuth consent screen
+4. Add test users
+5. Create OAuth credentials
+6. Download client_secret.json
+
+With this MCP:
 ```bash
-git clone https://github.com/sam-ent/appscript-mcp.git
-cd appscript-mcp
-uv sync  # then use 'uv run appscript-mcp'
+google-automation-mcp auth   # Uses clasp, done in 30 seconds
 ```
 
-### 2. Setup & Authenticate
+[clasp](https://github.com/google/clasp) is Google's official Apps Script CLI. It handles OAuth without requiring a GCP project, making it ideal for:
+- Quick setup on new machines
+- Server deployments where GCP configuration is impractical
+- Multi-user scenarios with per-user credential storage
 
-**Interactive setup (recommended):**
-```bash
-uvx appscript-mcp setup
+### Multi-User Credentials
+
+All tools accept `user_google_email` for per-user isolation:
+
+```python
+# Each user's credentials stored separately in ~/.secrets/google-automation-mcp/credentials/
+search_gmail_messages(user_google_email="alice@example.com", query="is:unread")
+search_gmail_messages(user_google_email="bob@example.com", query="is:unread")
 ```
 
-The setup wizard detects your environment and guides you through authentication:
+## Example: Apps Script Automation
 
-<p align="center">
-  <img src="docs/images/setup-wizard.png" alt="Setup Wizard" width="500">
-</p>
+Create and deploy a custom spreadsheet function:
 
-Choose clasp for the easiest setup — no GCP project needed:
+```python
+# 1. Create a script bound to a spreadsheet
+create_script_project(
+    user_google_email="user@example.com",
+    title="Data Validator",
+    parent_id="SPREADSHEET_ID"
+)
 
-<p align="center">
-  <img src="docs/images/setup-auth.png" alt="clasp Authentication" width="500">
-</p>
-
-**Quick auth (if you know what you want):**
-```bash
-uvx appscript-mcp auth          # clasp (easiest, no GCP project needed)
-uvx appscript-mcp auth --oauth21  # OAuth 2.1 with PKCE (multi-user/production)
-```
-
-**Check status:**
-```bash
-uvx appscript-mcp status        # shows auth status and configured users
-```
-
-<p align="center">
-  <img src="docs/images/setup-status.png" alt="Status Command" width="400">
-</p>
-
-<details>
-<summary><strong>Authentication Methods Explained</strong></summary>
-
-| Method | Best For | Requires |
-|--------|----------|----------|
-| **clasp** | Personal use, CLI | Node.js (auto-installed) |
-| **OAuth 2.1** | Multi-user, production | GCP project with OAuth credentials |
-| **Legacy OAuth** | Headless servers | GCP project with OAuth credentials |
-
-**clasp (default)** uses [Google's official Apps Script CLI](https://github.com/google/clasp). No GCP project needed — just authenticate with your Google account.
-
-**OAuth 2.1 with PKCE** is for production deployments with multiple users. Each user authenticates separately and credentials are stored per-user.
-
-</details>
-
-<details>
-<summary><strong>Manual OAuth Setup (advanced)</strong></summary>
-
-If you need OAuth 2.1 or legacy OAuth:
-
-1. **[Enable APIs](https://console.cloud.google.com/flows/enableapi?apiid=script.googleapis.com,drive.googleapis.com)** — Click link, select your project, enable.
-
-2. **[Create OAuth Credentials](https://console.cloud.google.com/apis/credentials)** → Create Credentials → OAuth client ID → Desktop app → Download JSON
-
-3. **Configure credentials** (choose one):
-
-   **Option A: Environment variables**
-   ```bash
-   export GOOGLE_OAUTH_CLIENT_ID='your-client-id'
-   export GOOGLE_OAUTH_CLIENT_SECRET='your-client-secret'
-   ```
-
-   **Option B: JSON file**
-   ```bash
-   mkdir -p ~/.appscript-mcp
-   mv ~/Downloads/client_secret_*.json ~/.appscript-mcp/client_secret.json
-   ```
-
-4. **[Add yourself as test user](https://console.cloud.google.com/apis/credentials/consent)** — OAuth consent screen → Test users → Add your email
-
-5. **Authenticate:**
-   ```bash
-   uvx appscript-mcp auth --oauth21      # OAuth 2.1 with PKCE
-   uvx appscript-mcp auth --legacy       # Legacy OAuth 2.0
-   uvx appscript-mcp auth --headless     # Headless (no browser)
-   ```
-
-</details>
-
-### 3. Configure MCP Client
-
-**Claude Desktop** — Add to config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
-
-```json
-{
-  "mcpServers": {
-    "appscript": {
-      "command": "uvx",
-      "args": ["appscript-mcp"]
-    }
-  }
+# 2. Add custom function code
+update_script_content(
+    user_google_email="user@example.com",
+    script_id="...",
+    files=[{
+        "name": "Code",
+        "type": "SERVER_JS",
+        "source": """
+function VALIDATE_EMAIL(email) {
+  return /^[^@]+@[^@]+\\.[^@]+$/.test(email);
 }
-```
 
-**Claude Code** — Add to `~/.mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "appscript": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": ["appscript-mcp"],
-      "env": {
-        "MCP_TIMEOUT": "30000",
-        "MCP_TOOL_TIMEOUT": "90000"
-      }
-    }
-  }
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Validation')
+    .addItem('Check All Emails', 'validateAllEmails')
+    .addToUi();
 }
+"""
+    }]
+)
+
+# 3. Generate trigger code if needed
+generate_trigger_code(trigger_type="time_daily", function_name="dailyReport", schedule="9")
 ```
 
-### 4. Start Using
+Now `=VALIDATE_EMAIL(A1)` works in the spreadsheet, and a custom menu appears.
 
+## Available Tools (50)
+
+### Gmail (5)
+| Tool | Description |
+|------|-------------|
+| `search_gmail_messages` | Search with Gmail query syntax |
+| `get_gmail_message` | Get message content by ID |
+| `send_gmail_message` | Send email (plain or HTML) |
+| `list_gmail_labels` | List all labels |
+| `modify_gmail_labels` | Add/remove labels (archive, star, mark read) |
+
+### Drive (10)
+| Tool | Description |
+|------|-------------|
+| `search_drive_files` | Search with Drive query operators |
+| `list_drive_items` | List folder contents |
+| `get_drive_file_content` | Download/export file content |
+| `create_drive_file` | Create new file |
+| `create_drive_folder` | Create folder |
+| `delete_drive_file` | Permanently delete |
+| `trash_drive_file` | Move to trash |
+| `share_drive_file` | Share with user |
+| `list_drive_permissions` | List who has access |
+| `remove_drive_permission` | Revoke access |
+
+### Sheets (6)
+| Tool | Description |
+|------|-------------|
+| `list_spreadsheets` | List spreadsheets |
+| `get_sheet_values` | Read cell range |
+| `update_sheet_values` | Write to cell range |
+| `append_sheet_values` | Append rows |
+| `create_spreadsheet` | Create new spreadsheet |
+| `get_spreadsheet_metadata` | List sheets/tabs |
+
+### Calendar (5)
+| Tool | Description |
+|------|-------------|
+| `list_calendars` | List calendars |
+| `get_events` | Get events |
+| `create_event` | Create event |
+| `update_event` | Modify event |
+| `delete_event` | Delete event |
+
+### Docs (5)
+| Tool | Description |
+|------|-------------|
+| `search_docs` | Search by name |
+| `get_doc_content` | Get text content |
+| `create_doc` | Create document |
+| `modify_doc_text` | Insert/replace text |
+| `append_doc_text` | Append to end |
+
+### Apps Script (17)
+| Tool | Description |
+|------|-------------|
+| `list_script_projects` | List projects |
+| `get_script_project` | Get project with files |
+| `get_script_content` | Get file content |
+| `create_script_project` | Create project (standalone or bound) |
+| `update_script_content` | Update project files |
+| `delete_script_project` | Delete project |
+| `run_script_function` | Execute function (requires setup) |
+| `create_deployment` | Deploy project |
+| `list_deployments` | List deployments |
+| `update_deployment` | Update deployment |
+| `delete_deployment` | Delete deployment |
+| `list_versions` | List versions |
+| `create_version` | Create version |
+| `get_version` | Get version details |
+| `list_script_processes` | View executions |
+| `get_script_metrics` | Execution analytics |
+| `generate_trigger_code` | Generate trigger code |
+
+### Auth (2)
+| Tool | Description |
+|------|-------------|
+| `start_google_auth` | Start OAuth flow |
+| `complete_google_auth` | Complete OAuth |
+
+## Apps Script: When You Need It
+
+Most automation uses Workspace tools directly. Apps Script is for extending Google Workspace UI — things REST APIs cannot do:
+
+| Capability | Example |
+|------------|---------|
+| Custom spreadsheet functions | `=VALIDATE_EMAIL(A1)` in cells |
+| Real-time `onEdit` trigger | React when user edits a cell |
+| Real-time `onOpen` trigger | Run code when document opens |
+| Custom menus | Add menu items to Sheets/Docs UI |
+| Sidebar panels | Custom UI inside Google apps |
+| Webhooks | `doGet`/`doPost` HTTP handlers |
+
+### Bound Scripts
+
+Attach scripts to specific documents:
+
+```python
+create_script_project(title="My Script", parent_id="SPREADSHEET_ID")
 ```
-"List my Apps Script projects"
-"Create a new script called 'Daily Report'"
-"Show me the code in my Daily Report script"
-```
 
-## Authentication Reference
-
-| Command | When to Use |
-|---------|-------------|
-| `appscript-mcp setup` | First-time setup with guided prompts |
-| `appscript-mcp auth` | Quick auth with clasp (no GCP project) |
-| `appscript-mcp auth --oauth21` | OAuth 2.1 with PKCE for multi-user |
-| `appscript-mcp auth --legacy` | Legacy OAuth 2.0 with GCP credentials |
-| `appscript-mcp auth --headless` | Headless environments (no browser) |
-| `appscript-mcp status` | Check authentication status |
-| In-conversation (`start_google_auth`) | Re-authenticate without leaving the conversation |
-
-**Token storage:**
-- Per-user credentials: `~/.secrets/appscript-mcp/credentials/{email}.json`
-- clasp tokens: Read from `~/.clasprc.json` and imported to credential store
-- All files use 600 permissions (owner read/write only)
-
-## Available Tools
-
-### Authentication
-| Tool | Description |
-|------|-------------|
-| `start_google_auth` | Start OAuth flow, returns authorization URL |
-| `complete_google_auth` | Complete OAuth with redirect URL |
-
-### CRUD
-| Tool | Description |
-|------|-------------|
-| `list_script_projects` | List all accessible Apps Script projects |
-| `get_script_project` | Get project details including all files |
-| `get_script_content` | Get content of a specific file |
-| `create_script_project` | Create a new project (standalone or bound to Sheet/Doc/Form/Slides) |
-| `update_script_content` | Update files in a project |
-| `delete_script_project` | Delete a project (permanent) |
-
-### Execution
-| Tool | Description |
-|------|-------------|
-| `run_script_function` | Execute a function in a script |
-
-### Deployments
-| Tool | Description |
-|------|-------------|
-| `create_deployment` | Create a new deployment |
-| `list_deployments` | List all deployments |
-| `update_deployment` | Update deployment configuration |
-| `delete_deployment` | Delete a deployment |
-
-### Versions
-| Tool | Description |
-|------|-------------|
-| `list_versions` | List all versions of a script |
-| `create_version` | Create an immutable version snapshot |
-| `get_version` | Get details of a specific version |
-
-### Monitoring
-| Tool | Description |
-|------|-------------|
-| `list_script_processes` | View recent script executions |
-| `get_script_metrics` | Get execution analytics (active users, executions, failures) |
-
-### Triggers
-| Tool | Description |
-|------|-------------|
-| `generate_trigger_code` | Generate Apps Script code for time-based or event triggers |
-
-## Bound Scripts
-
-Create scripts attached to Google Sheets, Docs, Forms, or Slides:
-
-```
-"Create a script bound to my spreadsheet https://docs.google.com/spreadsheets/d/ABC123/edit"
-```
-
-Pass the document ID as `parent_id` to `create_script_project`. Bound scripts can:
-- Add custom menus to the document
-- Use `onOpen` and `onEdit` simple triggers
-- Access `SpreadsheetApp.getActiveSpreadsheet()` directly
-
-## Triggers
-
-The Apps Script REST API cannot create triggers directly. Use `generate_trigger_code` to get code you can add to your script:
-
-```
-"Generate code for a daily trigger that runs sendReport at 9am"
-```
-
-**Supported trigger types:**
-- `time_minutes` — Run every 1, 5, 10, 15, or 30 minutes
-- `time_hours` — Run every 1, 2, 4, 6, 8, or 12 hours
-- `time_daily` — Run daily at a specific hour
-- `time_weekly` — Run weekly on a specific day
-- `on_open` — Run when document opens (simple trigger)
-- `on_edit` — Run when user edits (simple trigger)
-- `on_form_submit` — Run when form is submitted
-- `on_change` — Run when spreadsheet changes
+Bound scripts can use `onOpen`, `onEdit`, custom menus, and `SpreadsheetApp.getActiveSpreadsheet()`.
 
 ## Limitations
 
-### run_script_function Requires API Executable Deployment
+### run_script_function Setup
 
-The `run_script_function` tool requires manual configuration in the Apps Script editor:
+Executing Apps Script functions via API requires manual setup:
 
-1. Open the script in the Apps Script editor
-2. Go to Project Settings (gear icon)
-3. Under "Google Cloud Platform (GCP) Project", click "Change project"
-4. Enter your GCP project number
-5. Click "Deploy" > "New deployment"
-6. Select type: "API Executable"
-7. Set "Who has access" to "Anyone" or "Anyone with Google account"
-8. Click "Deploy"
+1. Open script at script.google.com
+2. Project Settings → Change GCP project
+3. Deploy → New deployment → API Executable
 
-All other tools work without this manual step.
+All other tools work without this.
 
 ### API Quotas
 
-Google enforces rate limits on the Apps Script API. If running many operations, you may encounter quota errors. See [Apps Script Quotas](https://developers.google.com/apps-script/guides/services/quotas) for details.
+Google enforces [rate limits](https://developers.google.com/apps-script/guides/services/quotas) on API calls.
 
-## Roadmap
+## Security
 
-- [x] Trigger code generation (time-based, event-driven)
-- [x] Bound scripts support (Sheets, Docs, Forms, Slides)
-- [x] Version management (create, list, get versions)
-- [x] Execution metrics and analytics
-- [x] PyPI package (`uvx appscript-mcp`)
-- [x] clasp authentication (no GCP project needed)
-- [x] Multi-user credential storage with secure permissions
-- [x] OAuth 2.1 with PKCE support
-- [x] Interactive setup wizard
-- [ ] Google Workspace tools (Gmail, Drive, Sheets, Calendar, Docs)
-- [ ] Claude Desktop one-click install (DXT)
+| Aspect | Direct API | MCP |
+|--------|------------|-----|
+| Credentials | AI handles tokens | AI never sees tokens |
+| API access | Any endpoint | 50 curated tools only |
+| Audit | Build your own | Every tool call logged |
 
-See [Issues](https://github.com/sam-ent/appscript-mcp/issues) to request features or report bugs.
+## CLI Reference
+
+```bash
+google-automation-mcp           # Run server
+google-automation-mcp setup     # Interactive setup
+google-automation-mcp auth      # Authenticate (clasp)
+google-automation-mcp auth --oauth21  # OAuth 2.1 for production
+google-automation-mcp status    # Check auth status
+google-automation-mcp version   # Show version
+```
+
+**Credentials:** `~/.secrets/google-automation-mcp/credentials/{email}.json`
+
+## Production: OAuth 2.1
+
+For multi-user deployments:
+
+```bash
+export GOOGLE_OAUTH_CLIENT_ID='...'
+export GOOGLE_OAUTH_CLIENT_SECRET='...'
+google-automation-mcp auth --oauth21
+```
 
 ## Development
 
-### Run Tests
 ```bash
-uv run pytest tests/ -v
-```
-
-### Run Server Directly
-```bash
-uv run appscript-mcp
+git clone https://github.com/sam-ent/google-automation-mcp.git
+cd google-automation-mcp
+uv sync
+uv run pytest tests/ -v  # 45 tests
 ```
 
 ## Acknowledgments
 
-The authentication system is forked from [google_workspace_mcp](https://github.com/taylorwilsdon/google_workspace_mcp) (MIT License) with additions for clasp integration. Specifically:
-- `auth/credential_store.py` — Per-user credential storage
-- `auth/oauth_config.py` — OAuth configuration management
-- `auth/scopes.py` — Google Workspace OAuth scopes
-- `auth/google_auth.py` — OAuth flow handling
+Built on [google_workspace_mcp](https://github.com/taylorwilsdon/google_workspace_mcp) by Taylor Wilsdon (MIT License).
 
 ## License
 
-MIT License - see LICENSE file
+MIT

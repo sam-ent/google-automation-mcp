@@ -39,9 +39,10 @@ class TestListScriptProjects:
         mock_drive_service.files().list().execute.return_value = mock_response
 
         with patch(
-            "appscript_mcp.tools.get_drive_service", return_value=mock_drive_service
+            "google_automation_mcp.appscript_tools.get_drive_service",
+            return_value=mock_drive_service,
         ):
-            from appscript_mcp.tools import list_script_projects
+            from google_automation_mcp.appscript_tools import list_script_projects
 
             result = await list_script_projects()
 
@@ -55,9 +56,10 @@ class TestListScriptProjects:
         mock_drive_service.files().list().execute.return_value = {"files": []}
 
         with patch(
-            "appscript_mcp.tools.get_drive_service", return_value=mock_drive_service
+            "google_automation_mcp.appscript_tools.get_drive_service",
+            return_value=mock_drive_service,
         ):
-            from appscript_mcp.tools import list_script_projects
+            from google_automation_mcp.appscript_tools import list_script_projects
 
             result = await list_script_projects()
 
@@ -87,9 +89,10 @@ class TestGetScriptProject:
         mock_script_service.projects().get().execute.return_value = mock_response
 
         with patch(
-            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+            "google_automation_mcp.appscript_tools.get_script_service",
+            return_value=mock_script_service,
         ):
-            from appscript_mcp.tools import get_script_project
+            from google_automation_mcp.appscript_tools import get_script_project
 
             result = await get_script_project("test123")
 
@@ -108,9 +111,10 @@ class TestCreateScriptProject:
         mock_script_service.projects().create().execute.return_value = mock_response
 
         with patch(
-            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+            "google_automation_mcp.appscript_tools.get_script_service",
+            return_value=mock_script_service,
         ):
-            from appscript_mcp.tools import create_script_project
+            from google_automation_mcp.appscript_tools import create_script_project
 
             result = await create_script_project("New Project")
 
@@ -133,9 +137,10 @@ class TestUpdateScriptContent:
         )
 
         with patch(
-            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+            "google_automation_mcp.appscript_tools.get_script_service",
+            return_value=mock_script_service,
         ):
-            from appscript_mcp.tools import update_script_content
+            from google_automation_mcp.appscript_tools import update_script_content
 
             result = await update_script_content("test123", files_to_update)
 
@@ -153,9 +158,10 @@ class TestRunScriptFunction:
         mock_script_service.scripts().run().execute.return_value = mock_response
 
         with patch(
-            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+            "google_automation_mcp.appscript_tools.get_script_service",
+            return_value=mock_script_service,
         ):
-            from appscript_mcp.tools import run_script_function
+            from google_automation_mcp.appscript_tools import run_script_function
 
             result = await run_script_function("test123", "myFunction", dev_mode=True)
 
@@ -185,9 +191,10 @@ class TestCreateDeployment:
         )
 
         with patch(
-            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+            "google_automation_mcp.appscript_tools.get_script_service",
+            return_value=mock_script_service,
         ):
-            from appscript_mcp.tools import create_deployment
+            from google_automation_mcp.appscript_tools import create_deployment
 
             result = await create_deployment("test123", "Test deployment")
 
@@ -216,9 +223,10 @@ class TestListDeployments:
         )
 
         with patch(
-            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+            "google_automation_mcp.appscript_tools.get_script_service",
+            return_value=mock_script_service,
         ):
-            from appscript_mcp.tools import list_deployments
+            from google_automation_mcp.appscript_tools import list_deployments
 
             result = await list_deployments("test123")
 
@@ -235,9 +243,10 @@ class TestDeleteDeployment:
         mock_script_service.projects().deployments().delete().execute.return_value = {}
 
         with patch(
-            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+            "google_automation_mcp.appscript_tools.get_script_service",
+            return_value=mock_script_service,
         ):
-            from appscript_mcp.tools import delete_deployment
+            from google_automation_mcp.appscript_tools import delete_deployment
 
             result = await delete_deployment("test123", "deploy123")
 
@@ -263,9 +272,10 @@ class TestListScriptProcesses:
         mock_script_service.processes().list().execute.return_value = mock_response
 
         with patch(
-            "appscript_mcp.tools.get_script_service", return_value=mock_script_service
+            "google_automation_mcp.appscript_tools.get_script_service",
+            return_value=mock_script_service,
         ):
-            from appscript_mcp.tools import list_script_processes
+            from google_automation_mcp.appscript_tools import list_script_processes
 
             result = await list_script_processes()
 

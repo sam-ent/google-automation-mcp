@@ -1,5 +1,5 @@
 """
-clasp Integration for appscript-mcp
+clasp Integration for google-automation-mcp
 
 clasp is Google's official Apps Script CLI. We use it as the easiest
 authentication method - no GCP project setup needed.

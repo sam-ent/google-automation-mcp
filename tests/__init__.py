@@ -1,1 +1,1 @@
-"""Tests for appscript-mcp"""
+"""Tests for google-automation-mcp"""

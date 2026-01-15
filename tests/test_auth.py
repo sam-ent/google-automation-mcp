@@ -14,7 +14,7 @@ class TestCredentialStore:
 
     def test_store_and_retrieve_credential(self):
         """Test storing and retrieving credentials."""
-        from appscript_mcp.auth.credential_store import SecureCredentialStore
+        from google_automation_mcp.auth.credential_store import SecureCredentialStore
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Use a subdirectory to avoid chmod issues on /tmp
@@ -41,7 +41,7 @@ class TestCredentialStore:
 
     def test_list_users_empty(self):
         """Test listing users when none exist."""
-        from appscript_mcp.auth.credential_store import SecureCredentialStore
+        from google_automation_mcp.auth.credential_store import SecureCredentialStore
 
         with tempfile.TemporaryDirectory() as tmpdir:
             cred_dir = Path(tmpdir) / "credentials"
@@ -51,7 +51,7 @@ class TestCredentialStore:
 
     def test_delete_credential(self):
         """Test deleting credentials."""
-        from appscript_mcp.auth.credential_store import SecureCredentialStore
+        from google_automation_mcp.auth.credential_store import SecureCredentialStore
 
         with tempfile.TemporaryDirectory() as tmpdir:
             cred_dir = Path(tmpdir) / "credentials"
@@ -74,7 +74,7 @@ class TestOAuthConfig:
 
     def test_default_config(self):
         """Test default OAuth configuration."""
-        from appscript_mcp.auth.oauth_config import OAuthConfig
+        from google_automation_mcp.auth.oauth_config import OAuthConfig
 
         config = OAuthConfig()
         assert config.base_uri == "http://localhost"
@@ -82,7 +82,7 @@ class TestOAuthConfig:
 
     def test_env_override(self):
         """Test environment variable overrides."""
-        from appscript_mcp.auth.oauth_config import OAuthConfig
+        from google_automation_mcp.auth.oauth_config import OAuthConfig
 
         with patch.dict(os.environ, {"APPSCRIPT_MCP_PORT": "9000"}):
             config = OAuthConfig()
@@ -90,7 +90,7 @@ class TestOAuthConfig:
 
     def test_oauth21_detection(self):
         """Test OAuth 2.1 detection."""
-        from appscript_mcp.auth.oauth_config import OAuthConfig
+        from google_automation_mcp.auth.oauth_config import OAuthConfig
 
         with patch.dict(os.environ, {"MCP_ENABLE_OAUTH21": "true"}):
             config = OAuthConfig()
@@ -106,29 +106,29 @@ class TestClaspIntegration:
 
     def test_clasp_rc_path(self):
         """Test clasp RC path is correct."""
-        from appscript_mcp.auth.google_auth import CLASP_RC_PATH
+        from google_automation_mcp.auth.google_auth import CLASP_RC_PATH
 
         assert CLASP_RC_PATH == Path.home() / ".clasprc.json"
 
     def test_is_clasp_authenticated_no_file(self):
         """Test clasp auth check when file doesn't exist."""
-        from appscript_mcp.auth.google_auth import is_clasp_authenticated
+        from google_automation_mcp.auth.google_auth import is_clasp_authenticated
 
-        with patch("appscript_mcp.auth.google_auth.CLASP_RC_PATH") as mock_path:
+        with patch("google_automation_mcp.auth.google_auth.CLASP_RC_PATH") as mock_path:
             mock_path.exists.return_value = False
             assert is_clasp_authenticated() is False
 
     def test_get_clasp_tokens_no_file(self):
         """Test getting clasp tokens when file doesn't exist."""
-        from appscript_mcp.auth.google_auth import get_clasp_tokens
+        from google_automation_mcp.auth.google_auth import get_clasp_tokens
 
-        with patch("appscript_mcp.auth.google_auth.CLASP_RC_PATH") as mock_path:
+        with patch("google_automation_mcp.auth.google_auth.CLASP_RC_PATH") as mock_path:
             mock_path.exists.return_value = False
             assert get_clasp_tokens() is None
 
     def test_get_clasp_tokens_valid(self):
         """Test getting clasp tokens from valid file."""
-        from appscript_mcp.auth.google_auth import get_clasp_tokens
+        from google_automation_mcp.auth.google_auth import get_clasp_tokens
 
         mock_token_data = {
             "token": {
@@ -145,7 +145,7 @@ class TestClaspIntegration:
             temp_path = f.name
 
         try:
-            with patch("appscript_mcp.auth.google_auth.CLASP_RC_PATH", Path(temp_path)):
+            with patch("google_automation_mcp.auth.google_auth.CLASP_RC_PATH", Path(temp_path)):
                 tokens = get_clasp_tokens()
                 assert tokens is not None
                 assert tokens["access_token"] == "test_access"
@@ -159,7 +159,7 @@ class TestScopes:
 
     def test_scopes_defined(self):
         """Test that required scopes are defined."""
-        from appscript_mcp.auth.scopes import SCOPES, SCRIPT_SCOPES, DRIVE_SCOPES
+        from google_automation_mcp.auth.scopes import SCOPES, SCRIPT_SCOPES, DRIVE_SCOPES
 
         assert len(SCOPES) > 0
         assert "https://www.googleapis.com/auth/script.projects" in SCRIPT_SCOPES
@@ -167,7 +167,7 @@ class TestScopes:
 
     def test_tool_scopes_map(self):
         """Test tool to scopes mapping."""
-        from appscript_mcp.auth.scopes import TOOL_SCOPES_MAP
+        from google_automation_mcp.auth.scopes import TOOL_SCOPES_MAP
 
         assert "appscript" in TOOL_SCOPES_MAP
         assert "drive" in TOOL_SCOPES_MAP
@@ -175,7 +175,7 @@ class TestScopes:
 
     def test_get_scopes_for_tools(self):
         """Test getting scopes for specific tools."""
-        from appscript_mcp.auth.scopes import get_scopes_for_tools
+        from google_automation_mcp.auth.scopes import get_scopes_for_tools
 
         scopes = get_scopes_for_tools(["appscript"])
         assert "https://www.googleapis.com/auth/script.projects" in scopes

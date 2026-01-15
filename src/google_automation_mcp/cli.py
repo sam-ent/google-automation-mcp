@@ -1,5 +1,5 @@
 """
-CLI entry point for appscript-mcp.
+CLI entry point for google-automation-mcp.
 
 Provides:
 - setup: Interactive setup with environment detection
@@ -71,7 +71,7 @@ def _run_status():
     """Show authentication status."""
     from .setup import detect_environment
 
-    print("\nappscript-mcp Status")
+    print("\ngoogle-automation-mcp Status")
     print("=" * 40)
 
     env = detect_environment()
@@ -106,7 +106,7 @@ def _run_status():
 def _print_help():
     """Print help message."""
     print("""
-appscript-mcp - Google Workspace MCP for AI
+google-automation-mcp - Google Workspace MCP for AI
 
 Commands:
   setup      Interactive setup with environment detection (recommended)
@@ -123,11 +123,11 @@ Auth options:
   auth --oauth21        Use OAuth 2.1 (multi-user, production)
 
 Examples:
-  appscript-mcp setup           # Interactive setup
-  appscript-mcp auth            # Quick clasp authentication
-  appscript-mcp                 # Run MCP server
+  google-automation-mcp setup           # Interactive setup
+  google-automation-mcp auth            # Quick clasp authentication
+  google-automation-mcp                 # Run MCP server
 
-For more info: https://github.com/sam-ent/appscript-mcp
+For more info: https://github.com/sam-ent/google-automation-mcp
 """)
 
 
@@ -136,10 +136,10 @@ def _print_version():
     try:
         from importlib.metadata import version
 
-        v = version("appscript-mcp")
+        v = version("google-automation-mcp")
     except Exception:
         v = "unknown"
-    print(f"appscript-mcp {v}")
+    print(f"google-automation-mcp {v}")
 
 
 def _auth_clasp(headless: bool = False):
@@ -151,7 +151,7 @@ def _auth_clasp(headless: bool = False):
     )
     from .auth.credential_store import get_credential_store
 
-    print("appscript-mcp Authentication")
+    print("google-automation-mcp Authentication")
     print("=" * 40)
     print()
 
@@ -177,12 +177,12 @@ def _auth_clasp(headless: bool = False):
         print("  npm install -g @google/clasp")
         print()
         print("Or run interactive setup:")
-        print("  appscript-mcp setup")
+        print("  google-automation-mcp setup")
         print()
 
         if headless:
             print("For headless environments, use:")
-            print("  appscript-mcp auth --legacy --headless")
+            print("  google-automation-mcp auth --legacy --headless")
         return
 
     if headless:
@@ -193,7 +193,7 @@ def _auth_clasp(headless: bool = False):
         print("   then copy ~/.clasprc.json to this machine.")
         print()
         print("2. Use legacy OAuth (requires GCP project):")
-        print("   appscript-mcp auth --legacy --headless")
+        print("   google-automation-mcp auth --legacy --headless")
         return
 
     # Run clasp login
@@ -221,7 +221,7 @@ def _auth_local_legacy():
     if existing:
         print(f"Already authenticated: {', '.join(existing)}")
         print()
-        print("To re-authenticate, use: appscript-mcp setup")
+        print("To re-authenticate, use: google-automation-mcp setup")
         return
 
     print("Legacy OAuth Authentication (requires GCP project)")
@@ -239,7 +239,7 @@ def _auth_local_legacy():
         print(f"Error: {e}")
         print()
         print("For easier setup without GCP project:")
-        print("  appscript-mcp setup")
+        print("  google-automation-mcp setup")
         sys.exit(1)
     except Exception as e:
         print(f"Authentication failed: {e}")
