@@ -95,10 +95,17 @@ uv sync  # then use 'uv run appscript-mcp'
 uvx appscript-mcp setup
 ```
 
-The setup wizard:
-1. Detects your environment (clasp, OAuth config, existing credentials)
-2. Recommends the best authentication method
-3. Guides you through authentication
+The setup wizard detects your environment and guides you through authentication:
+
+<p align="center">
+  <img src="docs/images/setup-wizard.png" alt="Setup Wizard" width="500">
+</p>
+
+Choose clasp for the easiest setup — no GCP project needed:
+
+<p align="center">
+  <img src="docs/images/setup-auth.png" alt="clasp Authentication" width="500">
+</p>
 
 **Quick auth (if you know what you want):**
 ```bash
@@ -110,6 +117,10 @@ uvx appscript-mcp auth --oauth21  # OAuth 2.1 with PKCE (multi-user/production)
 ```bash
 uvx appscript-mcp status        # shows auth status and configured users
 ```
+
+<p align="center">
+  <img src="docs/images/setup-status.png" alt="Status Command" width="400">
+</p>
 
 <details>
 <summary><strong>Authentication Methods Explained</strong></summary>
