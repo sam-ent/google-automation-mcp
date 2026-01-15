@@ -89,6 +89,7 @@ def __getattr__(name):
     ]
     if name in _appscript_tools:
         from .. import appscript_tools
+
         return getattr(appscript_tools, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

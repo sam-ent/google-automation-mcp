@@ -12,7 +12,7 @@ from googleapiclient.errors import HttpError
 
 logger = logging.getLogger(__name__)
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 def handle_errors(func: F) -> F:
