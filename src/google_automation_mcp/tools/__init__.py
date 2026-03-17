@@ -65,6 +65,24 @@ from .docs import (
     append_doc_text,
 )
 
+# Tasks tools
+from .tasks import (
+    list_task_lists,
+    get_tasks,
+    create_task,
+    update_task,
+    delete_task,
+    complete_task,
+)
+
+# Forms tools
+from .forms import (
+    get_form,
+    get_form_responses,
+    create_form,
+    add_form_question,
+)
+
 
 # Lazy imports for Apps Script tools to avoid circular imports
 def __getattr__(name):
@@ -155,4 +173,16 @@ __all__ = [
     "create_doc",
     "modify_doc_text",
     "append_doc_text",
+    # Tasks
+    "list_task_lists",
+    "get_tasks",
+    "create_task",
+    "update_task",
+    "delete_task",
+    "complete_task",
+    # Forms
+    "get_form",
+    "get_form_responses",
+    "create_form",
+    "add_form_question",
 ]

@@ -41,6 +41,18 @@ from .tools import (
     create_doc,
     modify_doc_text,
     append_doc_text,
+    # Tasks
+    list_task_lists,
+    get_tasks,
+    create_task,
+    update_task as update_task_impl,
+    delete_task,
+    complete_task,
+    # Forms
+    get_form,
+    get_form_responses,
+    create_form,
+    add_form_question,
 )
 
 
@@ -766,4 +778,240 @@ def register_workspace_tools(mcp):
             user_google_email=user_google_email,
             document_id=document_id,
             text=text,
+        )
+
+    # ========================================================================
+    # Tasks Tools
+    # ========================================================================
+
+    @mcp.tool()
+    async def list_task_lists_tool(
+        user_google_email: str,
+        max_results: int = 20,
+    ) -> str:
+        """
+        List all Google Tasks lists for the user.
+
+        Args:
+            user_google_email: The user's Google email address
+            max_results: Maximum number of task lists to return (default: 20)
+        """
+        return await list_task_lists(
+            user_google_email=user_google_email,
+            max_results=max_results,
+        )
+
+    @mcp.tool()
+    async def get_tasks_tool(
+        user_google_email: str,
+        tasklist_id: str = "@default",
+        max_results: int = 20,
+        show_completed: bool = True,
+        show_hidden: bool = False,
+    ) -> str:
+        """
+        Get tasks from a Google Tasks list.
+
+        Args:
+            user_google_email: The user's Google email address
+            tasklist_id: Task list ID (default: '@default' for the user's default list)
+            max_results: Maximum number of tasks to return (default: 20)
+            show_completed: Whether to include completed tasks (default: True)
+            show_hidden: Whether to include hidden tasks (default: False)
+        """
+        return await get_tasks(
+            user_google_email=user_google_email,
+            tasklist_id=tasklist_id,
+            max_results=max_results,
+            show_completed=show_completed,
+            show_hidden=show_hidden,
+        )
+
+    @mcp.tool()
+    async def create_task_tool(
+        user_google_email: str,
+        title: str,
+        tasklist_id: str = "@default",
+        notes: str = "",
+        due: str = "",
+    ) -> str:
+        """
+        Create a new task in Google Tasks.
+
+        Args:
+            user_google_email: The user's Google email address
+            title: Task title
+            tasklist_id: Task list ID (default: '@default')
+            notes: Optional task notes/description
+            due: Optional due date in RFC 3339 format (e.g., "2024-01-15T00:00:00.000Z")
+        """
+        return await create_task(
+            user_google_email=user_google_email,
+            title=title,
+            tasklist_id=tasklist_id,
+            notes=notes if notes else None,
+            due=due if due else None,
+        )
+
+    @mcp.tool()
+    async def update_task_tool(
+        user_google_email: str,
+        task_id: str,
+        tasklist_id: str = "@default",
+        title: str = "",
+        notes: str = "",
+        due: str = "",
+        status: str = "",
+    ) -> str:
+        """
+        Update an existing task in Google Tasks.
+
+        Args:
+            user_google_email: The user's Google email address
+            task_id: The task ID to update
+            tasklist_id: Task list ID (default: '@default')
+            title: New task title (optional)
+            notes: New notes/description (optional)
+            due: New due date in RFC 3339 format (optional)
+            status: New status - "needsAction" or "completed" (optional)
+        """
+        return await update_task_impl(
+            user_google_email=user_google_email,
+            task_id=task_id,
+            tasklist_id=tasklist_id,
+            title=title if title else None,
+            notes=notes if notes else None,
+            due=due if due else None,
+            status=status if status else None,
+        )
+
+    @mcp.tool()
+    async def delete_task_tool(
+        user_google_email: str,
+        task_id: str,
+        tasklist_id: str = "@default",
+    ) -> str:
+        """
+        Delete a task from Google Tasks.
+
+        Args:
+            user_google_email: The user's Google email address
+            task_id: The task ID to delete
+            tasklist_id: Task list ID (default: '@default')
+        """
+        return await delete_task(
+            user_google_email=user_google_email,
+            task_id=task_id,
+            tasklist_id=tasklist_id,
+        )
+
+    @mcp.tool()
+    async def complete_task_tool(
+        user_google_email: str,
+        task_id: str,
+        tasklist_id: str = "@default",
+    ) -> str:
+        """
+        Mark a task as completed in Google Tasks.
+
+        Args:
+            user_google_email: The user's Google email address
+            task_id: The task ID to complete
+            tasklist_id: Task list ID (default: '@default')
+        """
+        return await complete_task(
+            user_google_email=user_google_email,
+            task_id=task_id,
+            tasklist_id=tasklist_id,
+        )
+
+    # ========================================================================
+    # Forms Tools
+    # ========================================================================
+
+    @mcp.tool()
+    async def get_form_tool(
+        user_google_email: str,
+        form_id: str,
+    ) -> str:
+        """
+        Get a Google Form's structure and questions.
+
+        Args:
+            user_google_email: The user's Google email address
+            form_id: The form ID
+        """
+        return await get_form(
+            user_google_email=user_google_email,
+            form_id=form_id,
+        )
+
+    @mcp.tool()
+    async def get_form_responses_tool(
+        user_google_email: str,
+        form_id: str,
+        max_results: int = 50,
+    ) -> str:
+        """
+        Get responses submitted to a Google Form.
+
+        Args:
+            user_google_email: The user's Google email address
+            form_id: The form ID
+            max_results: Maximum number of responses to return (default: 50)
+        """
+        return await get_form_responses(
+            user_google_email=user_google_email,
+            form_id=form_id,
+            max_results=max_results,
+        )
+
+    @mcp.tool()
+    async def create_form_tool(
+        user_google_email: str,
+        title: str,
+        description: str = "",
+    ) -> str:
+        """
+        Create a new Google Form.
+
+        Args:
+            user_google_email: The user's Google email address
+            title: Form title
+            description: Optional form description
+        """
+        return await create_form(
+            user_google_email=user_google_email,
+            title=title,
+            description=description if description else None,
+        )
+
+    @mcp.tool()
+    async def add_form_question_tool(
+        user_google_email: str,
+        form_id: str,
+        title: str,
+        question_type: str = "TEXT",
+        required: bool = False,
+        choices: str = "",
+    ) -> str:
+        """
+        Add a question to a Google Form.
+
+        Args:
+            user_google_email: The user's Google email address
+            form_id: The form ID
+            title: Question text
+            question_type: Type - "TEXT", "PARAGRAPH", "MULTIPLE_CHOICE",
+                           "CHECKBOX", "DROP_DOWN", "SCALE" (default: "TEXT")
+            required: Whether the question is required (default: False)
+            choices: Comma-separated choices (for MULTIPLE_CHOICE, CHECKBOX, DROP_DOWN)
+        """
+        return await add_form_question(
+            user_google_email=user_google_email,
+            form_id=form_id,
+            title=title,
+            question_type=question_type,
+            required=required,
+            choices=choices if choices else None,
         )

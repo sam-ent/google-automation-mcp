@@ -129,3 +129,13 @@ def with_docs_service(func: Callable) -> Callable:
 def with_script_service(func: Callable) -> Callable:
     """Decorator that injects authenticated Apps Script service."""
     return with_service("script", "v1")(func)
+
+
+def with_tasks_service(func: Callable) -> Callable:
+    """Decorator that injects authenticated Google Tasks service."""
+    return with_service("tasks", "v1")(func)
+
+
+def with_forms_service(func: Callable) -> Callable:
+    """Decorator that injects authenticated Google Forms service."""
+    return with_service("forms", "v1")(func)
