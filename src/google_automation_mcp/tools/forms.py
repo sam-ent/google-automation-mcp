@@ -80,10 +80,7 @@ async def get_form_responses(
     logger.info(f"[get_form_responses] User: {user_google_email}, Form: {form_id}")
 
     response = await asyncio.to_thread(
-        service.forms()
-        .responses()
-        .list(formId=form_id, pageSize=max_results)
-        .execute
+        service.forms().responses().list(formId=form_id, pageSize=max_results).execute
     )
 
     responses = response.get("responses", [])
@@ -211,9 +208,7 @@ async def add_form_question(
     }
 
     await asyncio.to_thread(
-        service.forms()
-        .batchUpdate(formId=form_id, body=request_body)
-        .execute
+        service.forms().batchUpdate(formId=form_id, body=request_body).execute
     )
 
     return f"Added question '{title}' ({question_type}) to form {form_id}"
