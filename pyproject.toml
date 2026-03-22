@@ -56,13 +56,6 @@ omit = [
     "src/google_automation_mcp/setup.py",
     "src/google_automation_mcp/server*.py",
     "src/google_automation_mcp/appscript_tools.py",
-    "src/google_automation_mcp/tools/drive.py",
-    "src/google_automation_mcp/tools/gmail.py",
-    "src/google_automation_mcp/tools/sheets.py",
-    "src/google_automation_mcp/tools/calendar.py",
-    "src/google_automation_mcp/tools/docs.py",
-    "src/google_automation_mcp/tools/tasks.py",
-    "src/google_automation_mcp/tools/forms.py",
     "src/google_automation_mcp/auth/clasp.py",
 ]
 
@@ -77,5 +70,6 @@ exclude_lines = [
 
 [dependency-groups]
 dev = [
+    "pytest-cov>=7.1.0",
     "ruff>=0.14.11",
 ]
