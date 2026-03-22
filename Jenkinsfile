@@ -13,7 +13,7 @@ pipeline {
             steps {
                 sh '''
                     pip install --upgrade pip -q
-                    pip install -e ".[dev]" -q
+                    pip install -e ".[dev]"
                     ruff check src/ tests/
                     ruff format --check src/ tests/
                 '''
@@ -27,7 +27,7 @@ pipeline {
             steps {
                 sh '''
                     pip install --upgrade pip -q
-                    pip install -e ".[dev]" -q
+                    pip install -e ".[dev]"
                     pytest tests/ -v
                 '''
             }
