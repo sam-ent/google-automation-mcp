@@ -49,6 +49,22 @@ packages = ["src/google_automation_mcp"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 
+[tool.coverage.run]
+source = ["src/google_automation_mcp"]
+omit = [
+    "src/google_automation_mcp/cli.py",
+    "src/google_automation_mcp/setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "\\.\\.\\.$$",
+]
+
 [dependency-groups]
 dev = [
     "ruff>=0.14.11",
