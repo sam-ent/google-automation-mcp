@@ -1,7 +1,7 @@
 # Google Automation MCP
 
-[![PyPI](https://img.shields.io/pypi/v/google-automation-mcp)](https://pypi.org/project/google-automation-mcp/)
-[![Tests](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml) [![codecov](https://codecov.io/gh/sam-ent/google-automation-mcp/graph/badge.svg)](https://codecov.io/gh/sam-ent/google-automation-mcp)
+[![PyPI](https://img.shields.io/pypi/v/google-automation-mcp)](https://pypi.org/project/google-automation-mcp/) [![Tests](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml) [![codecov](https://codecov.io/gh/sam-ent/google-automation-mcp/graph/badge.svg)](https://codecov.io/gh/sam-ent/google-automation-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/) [![MCP](https://img.shields.io/badge/MCP-compatible-green.svg)](https://modelcontextprotocol.io) [![Downloads](https://img.shields.io/pypi/dm/google-automation-mcp)](https://pypi.org/project/google-automation-mcp/) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 **Google Workspace APIs for AI agents — no GCP project required.**
 
