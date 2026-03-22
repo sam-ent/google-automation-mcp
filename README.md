@@ -1,7 +1,7 @@
 # Google Automation MCP
 
 [![PyPI](https://img.shields.io/pypi/v/google-automation-mcp)](https://pypi.org/project/google-automation-mcp/)
-[![Tests](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml)
+[![Tests](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml) [![codecov](https://codecov.io/gh/sam-ent/google-automation-mcp/graph/badge.svg)](https://codecov.io/gh/sam-ent/google-automation-mcp)
 
 **Google Workspace APIs for AI agents — no GCP project required.**
 
