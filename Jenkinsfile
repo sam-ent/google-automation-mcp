@@ -13,7 +13,7 @@ pipeline {
             steps {
                 sh '''
                     pip install --upgrade pip -q
-                    pip install -e ".[dev]"
+                    pip install -e ".[dev]" ruff
                     ruff check src/ tests/
                     ruff format --check src/ tests/
                 '''
