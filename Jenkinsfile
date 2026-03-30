@@ -65,5 +65,10 @@ pipeline {
                 }
             }
         }
+        always {
+            node('docker-runner') {
+                cleanWs()
+            }
+        }
     }
 }
