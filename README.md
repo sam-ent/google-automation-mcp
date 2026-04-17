@@ -3,7 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/google-automation-mcp)](https://pypi.org/project/google-automation-mcp/) [![Tests](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/sam-ent/google-automation-mcp/actions/workflows/test.yml) [![codecov](https://codecov.io/gh/sam-ent/google-automation-mcp/graph/badge.svg)](https://codecov.io/gh/sam-ent/google-automation-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/) [![MCP](https://img.shields.io/badge/MCP-compatible-green.svg)](https://modelcontextprotocol.io) [![Downloads](https://img.shields.io/pypi/dm/google-automation-mcp)](https://pypi.org/project/google-automation-mcp/) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-**Google Workspace APIs for AI agents — no GCP project required.**
+**Google Workspace APIs for AI agents - no GCP project required.**
 
 Uses [clasp](https://github.com/google/clasp) for authentication. No GCP console, no OAuth consent screen, no client secrets. Just authenticate and go.
 
@@ -16,10 +16,10 @@ uvx google-automation-mcp        # 4. Run server
 
 First run walks you through three one-time steps:
 
-1. **`gmcp auth`** — opens browser for Google sign-in (clasp OAuth)
-2. **Enable Apps Script API** — `gmcp auth` checks and prompts you to toggle ON at https://script.google.com/home/usersettings (5 seconds)
-3. **Authorize scopes** — `gmcp auth` deploys a Web App router and prints a URL. Open it, click "Allow" to grant Gmail/Drive/Sheets/Calendar/Docs/Forms/Tasks access
-4. **Done** — run `gmcp` or `uvx google-automation-mcp` to start the server
+1. **`gmcp auth`** - opens browser for Google sign-in (clasp OAuth)
+2. **Enable Apps Script API** - `gmcp auth` checks and prompts you to toggle ON at https://script.google.com/home/usersettings (5 seconds)
+3. **Authorize scopes** - `gmcp auth` deploys a Web App router and prints a URL. Open it, click "Allow" to grant Gmail/Drive/Sheets/Calendar/Docs/Forms/Tasks access
+4. **Done** - run `gmcp` or `uvx google-automation-mcp` to start the server
 
 Check status anytime: `gmcp status`
 
@@ -121,7 +121,7 @@ Credentials stored separately: `~/.secrets/google-automation-mcp/credentials/{em
 
 ## Apps Script: Extending Google Workspace
 
-Apps Script tools let you deploy code that runs inside Google apps — things REST APIs cannot do:
+Apps Script tools let you deploy code that runs inside Google apps - things REST APIs cannot do:
 
 | Capability | Example |
 |------------|---------|
