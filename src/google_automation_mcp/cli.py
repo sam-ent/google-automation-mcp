@@ -104,6 +104,19 @@ def _run_status():
     else:
         print("  ? Cannot check (not authenticated)")
 
+    print("\nWorkspace Router:")
+    from .router.deployer import _load_state
+    users = env.get("existing_users", [])
+    if users:
+        state = _load_state(users[0])
+        if state and state.get("web_app_url"):
+            print(f"  ✓ Deployed for {users[0]}")
+            print(f"    URL: {state['web_app_url']}")
+        else:
+            print("  ✗ Not deployed (run: gmcp auth)")
+    else:
+        print("  ? No authenticated user")
+
     print("\nOAuth:")
     if env["oauth_configured"]:
         print("  ✓ GCP credentials configured")
@@ -247,15 +260,44 @@ def _auth_clasp(headless: bool = False):
         # Check Apps Script API is enabled
         print()
         print("Checking Apps Script API access...")
-        if _check_apps_script_api():
-            print("✓ Apps Script API is enabled")
-        else:
+        if not _check_apps_script_api():
             print("✗ Apps Script API is not enabled")
             print()
             print("  This is a one-time toggle (5 seconds):")
             print(f"  → {APPS_SCRIPT_API_URL}")
             print()
-            print("  Turn ON 'Google Apps Script API', then you're all set.")
+            print("  Turn ON 'Google Apps Script API', then re-run: gmcp auth")
+            return
+
+        print("✓ Apps Script API is enabled")
+
+        # Deploy router and get authorization URL
+        print()
+        print("Deploying Workspace router...")
+        try:
+            import asyncio
+            from .router.deployer import deploy_router
+            from .auth import get_credentials
+            from .auth.credential_store import get_credential_store
+
+            store = get_credential_store()
+            users = store.list_users()
+            email = users[0] if users else None
+
+            if email:
+                state = asyncio.run(deploy_router(email))
+                url = state["web_app_url"]
+                print("✓ Router deployed")
+                print()
+                print("Last step — authorize Workspace scopes (one-time):")
+                print(f"  → {url}")
+                print()
+                print("  Open this URL, sign in, click 'Allow', then you're all set.")
+            else:
+                print("✗ No authenticated user found for router deployment")
+        except Exception as e:
+            print(f"✗ Router deployment failed: {e}")
+            print("  You can deploy later — it will auto-deploy on first tool call.")
 
 
 def _auth_local_legacy():
