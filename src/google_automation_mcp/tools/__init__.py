@@ -17,68 +17,7 @@ from .auth_tools import (
     complete_google_auth,
 )
 
-# Drive tools
-from .drive import (
-    search_drive_files,
-    list_drive_items,
-    get_drive_file_content,
-    create_drive_file,
-    create_drive_folder,
-    delete_drive_file,
-    trash_drive_file,
-    share_drive_file,
-    list_drive_permissions,
-    remove_drive_permission,
-)
 
-# Sheets tools
-from .sheets import (
-    list_spreadsheets,
-    get_sheet_values,
-    update_sheet_values,
-    create_spreadsheet,
-    append_sheet_values,
-    get_spreadsheet_metadata,
-)
-
-# Calendar tools
-from .calendar import (
-    list_calendars,
-    get_events,
-    create_event,
-    delete_event,
-    update_event,
-)
-
-# Docs tools
-from .docs import (
-    search_docs,
-    get_doc_content,
-    create_doc,
-    modify_doc_text,
-    append_doc_text,
-)
-
-# Tasks tools
-from .tasks import (
-    list_task_lists,
-    get_tasks,
-    create_task,
-    update_task,
-    delete_task,
-    complete_task,
-)
-
-# Forms tools
-from .forms import (
-    get_form,
-    get_form_responses,
-    create_form,
-    add_form_question,
-)
-
-
-# Gmail tools — conditionally loaded from router (clasp) or REST (OAuth/GCP)
 def _use_router() -> bool:
     override = os.getenv("MCP_USE_ROUTER", "auto")
     if override == "true":
@@ -90,14 +29,78 @@ def _use_router() -> bool:
     return not is_oauth_configured()
 
 
-_gmail_mod = importlib.import_module(
-    ".gmail_router" if _use_router() else ".gmail", __package__
-)
-search_gmail_messages = _gmail_mod.search_gmail_messages
-get_gmail_message = _gmail_mod.get_gmail_message
-send_gmail_message = _gmail_mod.send_gmail_message
-list_gmail_labels = _gmail_mod.list_gmail_labels
-modify_gmail_labels = _gmail_mod.modify_gmail_labels
+_ROUTER = _use_router()
+
+
+def _mod(router_name: str, rest_name: str, use_router: bool = _ROUTER):
+    return importlib.import_module(
+        f".{router_name}" if use_router else f".{rest_name}", __package__
+    )
+
+
+# Gmail
+_m = _mod("gmail_router", "gmail")
+search_gmail_messages = _m.search_gmail_messages
+get_gmail_message = _m.get_gmail_message
+send_gmail_message = _m.send_gmail_message
+list_gmail_labels = _m.list_gmail_labels
+modify_gmail_labels = _m.modify_gmail_labels
+
+# Drive
+_m = _mod("drive_router", "drive")
+search_drive_files = _m.search_drive_files
+list_drive_items = _m.list_drive_items
+get_drive_file_content = _m.get_drive_file_content
+create_drive_file = _m.create_drive_file
+create_drive_folder = _m.create_drive_folder
+delete_drive_file = _m.delete_drive_file
+trash_drive_file = _m.trash_drive_file
+share_drive_file = _m.share_drive_file
+list_drive_permissions = _m.list_drive_permissions
+remove_drive_permission = _m.remove_drive_permission
+
+# Sheets
+_m = _mod("sheets_router", "sheets")
+list_spreadsheets = _m.list_spreadsheets
+get_sheet_values = _m.get_sheet_values
+update_sheet_values = _m.update_sheet_values
+create_spreadsheet = _m.create_spreadsheet
+append_sheet_values = _m.append_sheet_values
+get_spreadsheet_metadata = _m.get_spreadsheet_metadata
+
+# Calendar
+_m = _mod("calendar_router", "calendar")
+list_calendars = _m.list_calendars
+get_events = _m.get_events
+create_event = _m.create_event
+delete_event = _m.delete_event
+update_event = _m.update_event
+
+# Docs
+_m = _mod("docs_router", "docs")
+search_docs = _m.search_docs
+get_doc_content = _m.get_doc_content
+create_doc = _m.create_doc
+modify_doc_text = _m.modify_doc_text
+append_doc_text = _m.append_doc_text
+
+# Tasks
+_m = _mod("tasks_router", "tasks")
+list_task_lists = _m.list_task_lists
+get_tasks = _m.get_tasks
+create_task = _m.create_task
+update_task = _m.update_task
+delete_task = _m.delete_task
+complete_task = _m.complete_task
+
+# Forms
+_m = _mod("forms_router", "forms")
+get_form = _m.get_form
+get_form_responses = _m.get_form_responses
+create_form = _m.create_form
+add_form_question = _m.add_form_question
+
+del _m, _ROUTER
 
 
 # Lazy imports for Apps Script tools to avoid circular imports
@@ -129,76 +132,22 @@ def __getattr__(name):
 
 
 __all__ = [
-    # Auth
-    "start_google_auth",
-    "complete_google_auth",
-    # Apps Script Projects
-    "list_script_projects",
-    "get_script_project",
-    "get_script_content",
-    "create_script_project",
-    "delete_script_project",
-    "update_script_content",
-    "run_script_function",
-    # Deployments
-    "create_deployment",
-    "list_deployments",
-    "update_deployment",
-    "delete_deployment",
-    # Versions
-    "list_versions",
-    "create_version",
-    "get_version",
-    # Processes
-    "list_script_processes",
-    # Metrics
-    "get_script_metrics",
-    # Gmail
-    "search_gmail_messages",
-    "get_gmail_message",
-    "send_gmail_message",
-    "list_gmail_labels",
-    "modify_gmail_labels",
-    # Drive
-    "search_drive_files",
-    "list_drive_items",
-    "get_drive_file_content",
-    "create_drive_file",
-    "create_drive_folder",
-    "delete_drive_file",
-    "trash_drive_file",
-    "share_drive_file",
-    "list_drive_permissions",
+    "start_google_auth", "complete_google_auth",
+    "list_script_projects", "get_script_project", "get_script_content",
+    "create_script_project", "delete_script_project", "update_script_content",
+    "run_script_function", "create_deployment", "list_deployments",
+    "update_deployment", "delete_deployment", "list_versions", "create_version",
+    "get_version", "list_script_processes", "get_script_metrics",
+    "search_gmail_messages", "get_gmail_message", "send_gmail_message",
+    "list_gmail_labels", "modify_gmail_labels",
+    "search_drive_files", "list_drive_items", "get_drive_file_content",
+    "create_drive_file", "create_drive_folder", "delete_drive_file",
+    "trash_drive_file", "share_drive_file", "list_drive_permissions",
     "remove_drive_permission",
-    # Sheets
-    "list_spreadsheets",
-    "get_sheet_values",
-    "update_sheet_values",
-    "create_spreadsheet",
-    "append_sheet_values",
-    "get_spreadsheet_metadata",
-    # Calendar
-    "list_calendars",
-    "get_events",
-    "create_event",
-    "delete_event",
-    "update_event",
-    # Docs
-    "search_docs",
-    "get_doc_content",
-    "create_doc",
-    "modify_doc_text",
-    "append_doc_text",
-    # Tasks
-    "list_task_lists",
-    "get_tasks",
-    "create_task",
-    "update_task",
-    "delete_task",
-    "complete_task",
-    # Forms
-    "get_form",
-    "get_form_responses",
-    "create_form",
-    "add_form_question",
+    "list_spreadsheets", "get_sheet_values", "update_sheet_values",
+    "create_spreadsheet", "append_sheet_values", "get_spreadsheet_metadata",
+    "list_calendars", "get_events", "create_event", "delete_event", "update_event",
+    "search_docs", "get_doc_content", "create_doc", "modify_doc_text", "append_doc_text",
+    "list_task_lists", "get_tasks", "create_task", "update_task", "delete_task", "complete_task",
+    "get_form", "get_form_responses", "create_form", "add_form_question",
 ]
