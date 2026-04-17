@@ -10,9 +10,12 @@ Uses [clasp](https://github.com/google/clasp) for authentication. No GCP console
 ## Quick Start
 
 ```bash
-uvx google-automation-mcp        # Run server
 uvx google-automation-mcp auth   # Authenticate (one-time browser sign-in)
+uvx google-automation-mcp        # Run server
 ```
+
+After auth, enable the **Apps Script API** (one-time, 5 seconds):
+→ https://script.google.com/home/usersettings — toggle ON.
 
 That's it. No GCP project setup. Tokens auto-refresh after initial auth.
 
@@ -146,6 +149,22 @@ export GOOGLE_OAUTH_CLIENT_ID='...'
 export GOOGLE_OAUTH_CLIENT_SECRET='...'
 gmcp auth --oauth21
 ```
+
+## Two Backends: Clasp Router vs REST API
+
+Workspace tools (Gmail, Drive, Sheets, etc.) can operate in two modes:
+
+| | **Clasp Router** (default) | **REST API** (with OAuth 2.1) |
+|---|---|---|
+| **Setup** | `gmcp auth` — one browser sign-in, no GCP project | Create GCP project, enable APIs, configure OAuth consent screen, create credentials |
+| **How it works** | Deploys an Apps Script Web App that calls `GmailApp`, `DriveApp`, etc. internally | Calls Google REST APIs directly with OAuth tokens |
+| **Latency** | ~1–3s per call (Apps Script cold starts) | ~100ms per call |
+| **Quotas** | [Apps Script daily limits](https://developers.google.com/apps-script/guides/services/quotas) (e.g., 100 emails/day on free Gmail) | REST API limits (higher) |
+| **Best for** | Personal use, quick setup, AI agents | High-volume, production, low-latency |
+
+The backend is selected automatically: if `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` are set, REST APIs are used. Otherwise, the clasp router handles Workspace calls.
+
+Override with `MCP_USE_ROUTER=true` or `MCP_USE_ROUTER=false` to force a specific backend.
 
 ## CLI Reference
 

@@ -8,19 +8,13 @@ https://github.com/taylorwilsdon/google_workspace_mcp
 Licensed under MIT License.
 """
 
+import importlib
+import os
+
 # Authentication tools - imported directly, not from appscript_tools to avoid circular imports
 from .auth_tools import (
     start_google_auth,
     complete_google_auth,
-)
-
-# Gmail tools
-from .gmail import (
-    search_gmail_messages,
-    get_gmail_message,
-    send_gmail_message,
-    list_gmail_labels,
-    modify_gmail_labels,
 )
 
 # Drive tools
@@ -82,6 +76,28 @@ from .forms import (
     create_form,
     add_form_question,
 )
+
+
+# Gmail tools — conditionally loaded from router (clasp) or REST (OAuth/GCP)
+def _use_router() -> bool:
+    override = os.getenv("MCP_USE_ROUTER", "auto")
+    if override == "true":
+        return True
+    if override == "false":
+        return False
+    from ..auth.oauth_config import is_oauth_configured
+
+    return not is_oauth_configured()
+
+
+_gmail_mod = importlib.import_module(
+    ".gmail_router" if _use_router() else ".gmail", __package__
+)
+search_gmail_messages = _gmail_mod.search_gmail_messages
+get_gmail_message = _gmail_mod.get_gmail_message
+send_gmail_message = _gmail_mod.send_gmail_message
+list_gmail_labels = _gmail_mod.list_gmail_labels
+modify_gmail_labels = _gmail_mod.modify_gmail_labels
 
 
 # Lazy imports for Apps Script tools to avoid circular imports
