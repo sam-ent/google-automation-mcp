@@ -4,6 +4,16 @@
 
 var SECRET = '{{MCP_SECRET}}';
 
+function doGet() {
+  // Touching GmailApp triggers the OAuth consent for Gmail scopes.
+  // After the user authorizes, all doPost calls work from the server.
+  GmailApp.getAliases();
+  return HtmlService.createHtmlOutput(
+    '<h2>MCP Router authorized</h2>' +
+    '<p>Gmail access granted. You can close this tab.</p>'
+  );
+}
+
 function doPost(e) {
   var payload = JSON.parse(e.postData.contents);
   if (payload.secret !== SECRET) {
