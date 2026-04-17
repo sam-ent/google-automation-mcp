@@ -10,16 +10,22 @@ Uses [clasp](https://github.com/google/clasp) for authentication. No GCP console
 ## Quick Start
 
 ```bash
-uvx google-automation-mcp auth   # Authenticate (one-time browser sign-in)
-uvx google-automation-mcp        # Run server
+uvx google-automation-mcp auth   # 1. Browser sign-in via clasp
+uvx google-automation-mcp        # 4. Run server
 ```
 
-After auth, enable the **Apps Script API** (one-time, 5 seconds):
-→ https://script.google.com/home/usersettings — toggle ON.
+First run walks you through three one-time steps:
 
-That's it. No GCP project setup. Tokens auto-refresh after initial auth.
+1. **`gmcp auth`** — opens browser for Google sign-in (clasp OAuth)
+2. **Enable Apps Script API** — `gmcp auth` checks and prompts you to toggle ON at https://script.google.com/home/usersettings (5 seconds)
+3. **Authorize scopes** — `gmcp auth` deploys a Web App router and prints a URL. Open it, click "Allow" to grant Gmail/Drive/Sheets/Calendar/Docs/Forms/Tasks access
+4. **Done** — run `gmcp` or `uvx google-automation-mcp` to start the server
+
+Check status anytime: `gmcp status`
 
 > **Tip:** Use the short alias `gmcp` after installing.
+
+> **Re-authorization:** If a future update adds new scopes, revoke the app at [myaccount.google.com/permissions](https://myaccount.google.com/permissions) (find "MCP-Router"), then visit the Web App URL again from `gmcp status`.
 
 ## Why No GCP Project?
 

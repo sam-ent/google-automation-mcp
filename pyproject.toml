@@ -1,6 +1,6 @@
 [project]
 name = "google-automation-mcp"
-version = "0.6.0"
+version = "0.7.0"
 description = "Headless Google Workspace automation for AI - Apps Script, Gmail, Drive, Sheets, Calendar, Docs, Tasks, Forms"
 readme = "README.md"
 license = { text = "MIT" }
