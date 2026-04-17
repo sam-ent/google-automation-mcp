@@ -72,6 +72,17 @@ def get_clasp_version() -> Optional[str]:
     return None
 
 
+def _extract_clasp_token(config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Extract token dict from clasp config, handling both old and new formats."""
+    # Old format: {"token": {...}}
+    if "token" in config and isinstance(config["token"], dict):
+        return config["token"]
+    # New format: {"tokens": {"default": {...}}}
+    if "tokens" in config and isinstance(config["tokens"], dict):
+        return config["tokens"].get("default")
+    return None
+
+
 def is_clasp_authenticated() -> bool:
     """Check if clasp has valid credentials stored."""
     if not CLASP_RC_PATH.exists():
@@ -80,7 +91,8 @@ def is_clasp_authenticated() -> bool:
     try:
         with open(CLASP_RC_PATH, "r") as f:
             config = json.load(f)
-        return "token" in config and config["token"].get("access_token")
+        token = _extract_clasp_token(config)
+        return token is not None and bool(token.get("access_token"))
     except (json.JSONDecodeError, IOError):
         return False
 
@@ -89,18 +101,7 @@ def get_clasp_tokens() -> Optional[Dict[str, Any]]:
     """
     Read tokens from clasp's credential file (~/.clasprc.json).
 
-    clasp token format:
-    {
-        "token": {
-            "access_token": "...",
-            "refresh_token": "...",
-            "scope": "https://www.googleapis.com/auth/... ...",
-            "token_type": "Bearer",
-            "expiry_date": 1234567890000,  // milliseconds
-            "client_id": "...",
-            "client_secret": "..."
-        }
-    }
+    Handles both old format {"token": {...}} and new format {"tokens": {"default": {...}}}.
 
     Returns:
         Token dict or None if not available.
@@ -111,7 +112,7 @@ def get_clasp_tokens() -> Optional[Dict[str, Any]]:
     try:
         with open(CLASP_RC_PATH, "r") as f:
             config = json.load(f)
-        return config.get("token")
+        return _extract_clasp_token(config)
     except (json.JSONDecodeError, IOError) as e:
         logger.warning(f"Failed to read clasp tokens: {e}")
         return None

@@ -9,6 +9,8 @@ Provides:
 
 import sys
 
+APPS_SCRIPT_API_URL = "https://script.google.com/home/usersettings"
+
 
 def main():
     """Main CLI entry point."""
@@ -92,13 +94,23 @@ def _run_status():
     else:
         print("  ✗ Not installed")
 
+    print("\nApps Script API:")
+    if env.get("clasp_authenticated") or env.get("has_credentials"):
+        if _check_apps_script_api():
+            print("  ✓ Enabled")
+        else:
+            print("  ✗ Not enabled")
+            print(f"    → Enable at: {APPS_SCRIPT_API_URL}")
+    else:
+        print("  ? Cannot check (not authenticated)")
+
     print("\nOAuth:")
     if env["oauth_configured"]:
         print("  ✓ GCP credentials configured")
         if env["oauth21_enabled"]:
             print("  ✓ OAuth 2.1 enabled")
     else:
-        print("  ✗ GCP credentials not configured")
+        print("  ✗ GCP credentials not configured (not needed for clasp)")
 
     print()
 
@@ -140,6 +152,29 @@ def _print_version():
     except Exception:
         v = "unknown"
     print(f"google-automation-mcp {v}")
+
+
+def _check_apps_script_api() -> bool:
+    """Check if the Apps Script API is enabled for the user. Returns True if OK."""
+    from .auth import get_script_service, get_drive_service
+
+    try:
+        service = get_script_service()
+        # projects.create is the only reliable endpoint that returns the
+        # "User has not enabled" 403. If it succeeds, clean up immediately.
+        project = service.projects().create(body={"title": "_mcp_api_check"}).execute()
+        script_id = project.get("scriptId")
+        if script_id:
+            try:
+                drive = get_drive_service()
+                drive.files().delete(fileId=script_id).execute()
+            except Exception:
+                pass
+        return True
+    except Exception as e:
+        if "User has not enabled the Apps Script API" in str(e):
+            return False
+        return True
 
 
 def _auth_clasp(headless: bool = False):
@@ -208,6 +243,19 @@ def _auth_clasp(headless: bool = False):
         from .setup import _import_clasp_credentials
 
         _import_clasp_credentials()
+
+        # Check Apps Script API is enabled
+        print()
+        print("Checking Apps Script API access...")
+        if _check_apps_script_api():
+            print("✓ Apps Script API is enabled")
+        else:
+            print("✗ Apps Script API is not enabled")
+            print()
+            print("  This is a one-time toggle (5 seconds):")
+            print(f"  → {APPS_SCRIPT_API_URL}")
+            print()
+            print("  Turn ON 'Google Apps Script API', then you're all set.")
 
 
 def _auth_local_legacy():
