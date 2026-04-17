@@ -5,7 +5,7 @@ MCP server for Google Apps Script and Google Workspace automation.
 Supports 50 tools across Gmail, Drive, Sheets, Calendar, Docs, and Apps Script.
 """
 
-__version__ = "0.5.2"
+__version__ = "0.7.0"
 
 # Cache for lazy-loaded modules to avoid recursion
 _lazy_cache = {}
