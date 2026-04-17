@@ -27,24 +27,54 @@ Check status anytime: `gmcp status`
 
 > **Re-authorization:** If a future update adds new scopes, revoke the app at [myaccount.google.com/permissions](https://myaccount.google.com/permissions) (find "MCP-Router"), then visit the Web App URL again from `gmcp status`.
 
-## Why No GCP Project?
+## Clasp Router vs REST API
 
-Traditional Google API setup requires:
-1. Create GCP project
-2. Enable APIs
-3. Configure OAuth consent screen
-4. Add test users
-5. Create OAuth credentials
-6. Download client_secret.json
+Workspace tools (Gmail, Drive, Sheets, etc.) can operate in two modes. The clasp router is the default and requires no GCP project. Traditional Google API setup requires creating a GCP project, enabling APIs, configuring an OAuth consent screen, adding test users, and creating credentials.
 
-This MCP uses **clasp** (Google's official Apps Script CLI) which handles OAuth without a GCP project. Same Google authentication, zero configuration.
+| | **Clasp Router** (default) | **REST API** (with OAuth 2.1) |
+|---|---|---|
+| **Setup time** | ~2 min (browser sign-in + one toggle + one Allow click) | ~15 min (GCP project + enable APIs + OAuth consent screen + credentials) |
+| **GCP project** | Not needed | Required |
+| **How it works** | Deploys an Apps Script Web App per user; tool calls routed via HTTP POST | Calls Google REST APIs directly with OAuth tokens |
+| **Latency** | ~1-3s per call (Apps Script execution overhead) | ~100-300ms per call |
+| **Execution timeout** | 30s per call (Apps Script limit) | No per-call limit |
+| **Best for** | Personal use, prototyping, AI agents | High-volume, production, low-latency apps |
+
+### Daily quotas (free consumer Google account)
+
+| Service | Clasp Router (Apps Script limits) | REST API limits |
+|---------|----------------------------------|-----------------|
+| **Gmail send** | 100 recipients/day | 500 emails/day (Gmail API) |
+| **Gmail read** | 50,000 reads/day | 250 quota units/s per user |
+| **Drive** | 90 min total runtime/day | 1 billion API calls/day (project) |
+| **Sheets** | 90 min total runtime/day | 300 requests/min per project |
+| **Calendar** | 5,000 events created/day | 1M queries/day per project |
+| **Docs** | 90 min total runtime/day | 300 requests/min per project |
+| **Forms** | 90 min total runtime/day | No published limit |
+| **Tasks** | Same as REST (calls Tasks API via `UrlFetchApp`) | 50,000 requests/day |
+
+> **Note:** Apps Script runtime limits are shared across all services. The 90 min/day limit applies to total execution time, not per-service. At ~2s per call, that's ~2,700 tool calls/day. [Full Apps Script quotas](https://developers.google.com/apps-script/guides/services/quotas)
+
+### Backend selection
+
+The backend is selected automatically: if `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` are set, REST APIs are used. Otherwise, the clasp router handles Workspace calls.
+
+Override with `MCP_USE_ROUTER=true` or `MCP_USE_ROUTER=false` to force a specific backend.
+
+For multi-user production deployments requiring your own OAuth credentials:
+
+```bash
+export GOOGLE_OAUTH_CLIENT_ID='...'
+export GOOGLE_OAUTH_CLIENT_SECRET='...'
+gmcp auth --oauth21
+```
 
 ## Security: AI Never Sees Credentials
 
 | | Direct API | This MCP |
 |---|---|---|
 | **Credentials** | AI handles tokens directly | AI never sees tokens |
-| **API access** | Any endpoint | 50 curated tools only |
+| **API access** | Any endpoint | 60 curated tools only |
 | **Audit** | Build your own | Every tool call logged |
 
 The MCP acts as a security boundary. Your AI agent calls tools; the MCP handles authentication internally.
@@ -85,7 +115,7 @@ Download [`google-automation-mcp.dxt`](https://github.com/sam-ent/google-automat
 gemini extensions install github:sam-ent/google-automation-mcp
 ```
 
-## Available Tools (50)
+## Available Tools (60)
 
 ### Gmail (5)
 `search_gmail_messages` · `get_gmail_message` · `send_gmail_message` · `list_gmail_labels` · `modify_gmail_labels`
@@ -101,6 +131,12 @@ gemini extensions install github:sam-ent/google-automation-mcp
 
 ### Docs (5)
 `get_doc_content` · `search_docs` · `create_doc` · `modify_doc_text` · `append_doc_text`
+
+### Forms (4)
+`get_form` · `create_form` · `add_form_question` · `get_form_responses`
+
+### Tasks (6)
+`list_task_lists` · `get_tasks` · `create_task` · `update_task` · `delete_task` · `complete_task`
 
 ### Apps Script (17)
 `list_script_projects` · `get_script_project` · `get_script_content` · `create_script_project` · `update_script_content` · `delete_script_project` · `run_script_function` · `create_deployment` · `list_deployments` · `update_deployment` · `delete_deployment` · `list_versions` · `create_version` · `get_version` · `list_script_processes` · `get_script_metrics` · `generate_trigger_code`
@@ -142,53 +178,7 @@ update_script_content(script_id="...", files=[{
 
 ## Limitations
 
-**`run_script_function`** requires one-time setup per script: Open script at script.google.com → Project Settings → Change GCP project → Deploy as API Executable. Once configured, functions can be called repeatedly. All other tools work without this setup.
-
-**API quotas**: Google enforces [rate limits](https://developers.google.com/apps-script/guides/services/quotas).
-
-## Production: OAuth 2.1
-
-For multi-user deployments requiring your own OAuth credentials:
-
-```bash
-export GOOGLE_OAUTH_CLIENT_ID='...'
-export GOOGLE_OAUTH_CLIENT_SECRET='...'
-gmcp auth --oauth21
-```
-
-## Two Backends: Clasp Router vs REST API
-
-Workspace tools (Gmail, Drive, Sheets, etc.) can operate in two modes:
-
-| | **Clasp Router** (default) | **REST API** (with OAuth 2.1) |
-|---|---|---|
-| **Setup time** | ~2 min (browser sign-in + one toggle + one Allow click) | ~15 min (GCP project + enable APIs + OAuth consent screen + credentials) |
-| **GCP project** | Not needed | Required |
-| **How it works** | Deploys an Apps Script Web App per user; tool calls routed via HTTP POST | Calls Google REST APIs directly with OAuth tokens |
-| **Latency** | ~1–3s per call (Apps Script execution overhead) | ~100–300ms per call |
-| **Execution timeout** | 30s per call (Apps Script limit) | No per-call limit |
-| **Best for** | Personal use, prototyping, AI agents | High-volume, production, low-latency apps |
-
-### Daily quotas (free consumer Google account)
-
-| Service | Clasp Router (Apps Script limits) | REST API limits |
-|---------|----------------------------------|-----------------|
-| **Gmail send** | 100 recipients/day | 500 emails/day (Gmail API) |
-| **Gmail read** | 50,000 reads/day | 250 quota units/s per user |
-| **Drive** | 90 min total runtime/day | 1 billion API calls/day (project) |
-| **Sheets** | 90 min total runtime/day | 300 requests/min per project |
-| **Calendar** | 5,000 events created/day | 1M queries/day per project |
-| **Docs** | 90 min total runtime/day | 300 requests/min per project |
-| **Forms** | 90 min total runtime/day | No published limit |
-| **Tasks** | Same as REST (calls Tasks API via `UrlFetchApp`) | 50,000 requests/day |
-
-> **Note:** Apps Script runtime limits are shared across all services. The 90 min/day limit applies to total execution time, not per-service. At ~2s per call, that's ~2,700 tool calls/day. [Full Apps Script quotas](https://developers.google.com/apps-script/guides/services/quotas)
-
-### Backend selection
-
-The backend is selected automatically: if `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` are set, REST APIs are used. Otherwise, the clasp router handles Workspace calls.
-
-Override with `MCP_USE_ROUTER=true` or `MCP_USE_ROUTER=false` to force a specific backend.
+**`run_script_function`** requires one-time setup per script: Open script at script.google.com -> Project Settings -> Change GCP project -> Deploy as API Executable. Once configured, functions can be called repeatedly. All other tools work without this setup.
 
 ## CLI Reference
 
@@ -209,7 +199,7 @@ gmcp version         # Show version
 git clone https://github.com/sam-ent/google-automation-mcp.git
 cd google-automation-mcp
 uv sync
-uv run pytest tests/ -v  # 45 tests
+uv run pytest tests/ -v  # 183 tests
 ```
 
 ## Acknowledgments
