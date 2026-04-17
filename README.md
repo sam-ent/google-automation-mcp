@@ -162,11 +162,29 @@ Workspace tools (Gmail, Drive, Sheets, etc.) can operate in two modes:
 
 | | **Clasp Router** (default) | **REST API** (with OAuth 2.1) |
 |---|---|---|
-| **Setup** | `gmcp auth` — one browser sign-in, no GCP project | Create GCP project, enable APIs, configure OAuth consent screen, create credentials |
-| **How it works** | Deploys an Apps Script Web App that calls `GmailApp`, `DriveApp`, etc. internally | Calls Google REST APIs directly with OAuth tokens |
-| **Latency** | ~1–3s per call (Apps Script cold starts) | ~100ms per call |
-| **Quotas** | [Apps Script daily limits](https://developers.google.com/apps-script/guides/services/quotas) (e.g., 100 emails/day on free Gmail) | REST API limits (higher) |
-| **Best for** | Personal use, quick setup, AI agents | High-volume, production, low-latency |
+| **Setup time** | ~2 min (browser sign-in + one toggle + one Allow click) | ~15 min (GCP project + enable APIs + OAuth consent screen + credentials) |
+| **GCP project** | Not needed | Required |
+| **How it works** | Deploys an Apps Script Web App per user; tool calls routed via HTTP POST | Calls Google REST APIs directly with OAuth tokens |
+| **Latency** | ~1–3s per call (Apps Script execution overhead) | ~100–300ms per call |
+| **Execution timeout** | 30s per call (Apps Script limit) | No per-call limit |
+| **Best for** | Personal use, prototyping, AI agents | High-volume, production, low-latency apps |
+
+### Daily quotas (free consumer Google account)
+
+| Service | Clasp Router (Apps Script limits) | REST API limits |
+|---------|----------------------------------|-----------------|
+| **Gmail send** | 100 recipients/day | 500 emails/day (Gmail API) |
+| **Gmail read** | 50,000 reads/day | 250 quota units/s per user |
+| **Drive** | 90 min total runtime/day | 1 billion API calls/day (project) |
+| **Sheets** | 90 min total runtime/day | 300 requests/min per project |
+| **Calendar** | 5,000 events created/day | 1M queries/day per project |
+| **Docs** | 90 min total runtime/day | 300 requests/min per project |
+| **Forms** | 90 min total runtime/day | No published limit |
+| **Tasks** | Same as REST (calls Tasks API via `UrlFetchApp`) | 50,000 requests/day |
+
+> **Note:** Apps Script runtime limits are shared across all services. The 90 min/day limit applies to total execution time, not per-service. At ~2s per call, that's ~2,700 tool calls/day. [Full Apps Script quotas](https://developers.google.com/apps-script/guides/services/quotas)
+
+### Backend selection
 
 The backend is selected automatically: if `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` are set, REST APIs are used. Otherwise, the clasp router handles Workspace calls.
 
