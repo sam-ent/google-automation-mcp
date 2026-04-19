@@ -37,8 +37,11 @@ pipeline {
     post {
         success {
             node('') {
-                withCredentials([string(credentialsId: 'github-token', variable: 'GH_TOKEN')]) {
-                    sh '''
+                sh '''
+                        set +x
+                        GH_TOKEN=$(/home/sraj/.secrets/rotate-secrets/gh-app-token)
+                        set -x
+
                         COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "$GIT_COMMIT")
                         curl -sf -X POST \
                           -H "Authorization: token $GH_TOKEN" \
@@ -47,13 +50,15 @@ pipeline {
                           "https://api.github.com/repos/sam-ent/google-automation-mcp/statuses/$COMMIT" \
                           -d "$(printf '{"state":"success","context":"jenkins/ci","description":"Build passed","target_url":"%s"}' "$BUILD_URL")" || true
                     '''
-                }
             }
         }
         failure {
             node('') {
-                withCredentials([string(credentialsId: 'github-token', variable: 'GH_TOKEN')]) {
-                    sh '''
+                sh '''
+                        set +x
+                        GH_TOKEN=$(/home/sraj/.secrets/rotate-secrets/gh-app-token)
+                        set -x
+
                         COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "$GIT_COMMIT")
                         curl -sf -X POST \
                           -H "Authorization: token $GH_TOKEN" \
@@ -62,7 +67,6 @@ pipeline {
                           "https://api.github.com/repos/sam-ent/google-automation-mcp/statuses/$COMMIT" \
                           -d "$(printf '{"state":"failure","context":"jenkins/ci","description":"Build failed","target_url":"%s"}' "$BUILD_URL")" || true
                     '''
-                }
             }
         }
         always {
